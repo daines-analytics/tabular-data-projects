@@ -1,0 +1,193 @@
+---
+title: "Sentiment Analysis and Opinion Mining via Twitter (Basic Model)"
+author: "David Lowe"
+date: "Sunday, July 2, 2017"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+Introduction & Background
+========================================================
+
+This application is similar to a service built at Stanford University called www.sentiment140.com.
+
+- Data-mines the opinions using social media streams (Twitter in this case)
+- Leverages pre-determined sentiment words list to refine analysis
+- Can potentially adapt machine learning techniques to further expand its analytical capabilities
+
+Reference Sources
+========================================================
+
+This application leverages a list of positive and negative opinion words or sentiment words for English (around 6800 words).
+
+- This list was compiled over many years starting from the authors' first paper (Hu and Liu, KDD-2004).
+- Authors' website: Sentiment Words Sources: Opinion Mining, Sentiment Analysis, and Opinion Spam Detection
+- Credits: Bing Liu and Minqing Hu, http://www.cs.uic.edu/~liub/FBS/sentiment-analysis.html
+
+How Does the Application Work?
+========================================================
+
+- Prerequisite: Copy the word lists "positive-words.txt" and "negative-words.txt" to the application directory.
+- In step #5, specify a keyword/phrase (e.g. data mining, machine learning, etc.) and the 50 most recent tweets generated that match the visitor-specified keywords are retrieved.
+- Using a pre-supplied list of sentiment words, the application assesses the tweets and identifies which ones are positive, which ones are neutral, and which ones are negative.
+- In the end, a bar graph is generated to display the resulting data.
+
+```{r}
+###############################################################################
+# Step 1 - Set Twitter API Keys
+api_key <- 'WDx9NzATD3kBZj7wUYbNExynT'
+api_secret <- 'wzyVyW3QZFbHOVMQykMmhBrqzoWDu2bR4PKjLETU98EwdCEXdt'
+access_token <- '45015731-8WVVKgrCimJHBPhXH5c3OG4QUvIDkL2UgKIJer6p2'
+access_token_secret <- '2FBpJdpxNrQQMoVJb6GpqU7yTyGXt4wUF2WQXpsSg2l59'
+```
+
+```{r}
+##############################################################################
+# Step 2 - Load package
+library(twitteR)
+library(plyr)
+library(stringr)
+```
+
+```{r}
+##############################################################################
+# Step 3 - Twitter authentication (Oauth) 
+setup_twitter_oauth(api_key, api_secret, access_token, access_token_secret)
+```
+
+```{r}
+##############################################################################
+# Step 4 - Read poitive and negative words from files
+pos = scan('positive-words.txt', what='character', comment.char=';')
+neg = scan('negative-words.txt', what='character', comment.char=';')
+```
+
+```{r}
+#############################################################################
+# Step 5 - Initialize Variables and get the Tweets
+keywords <- 'wonderwoman'
+nmax <- 50         # max number of tweets per sub-interval
+location <- NULL   # NULL or 'latitude,longitude,radius'
+
+today <- Sys.Date()
+since <- as.character(today)
+until <- as.character(today+1)
+
+# Get the tweets
+tweets <- searchTwitter(keywords,n=nmax,since=since,until=until,geocode=location,lang='en')
+```
+
+```{r}
+############################################################################
+# Step 6 - Compute Scores
+findScore <- function(sentence, pos.words, neg.words) {
+# Find score of a 'sentence', using positive / negative
+# words from corr. dictionaries.
+   require(stringr)
+ 
+   # remove punctuation
+   sentence <- gsub("[[:punct:]]", "", sentence)
+   # remove control characters
+   sentence <- gsub("[[:cntrl:]]", "", sentence)
+   # remove digits?
+   sentence <- gsub('\\d+', '', sentence)
+
+   # define error handling function when trying tolower
+   tryTolower = function(x) {
+      # create missing value
+      y <- NA
+      # tryCatch error
+      try_error = tryCatch(tolower(x), error=function(e) e)
+      if (!inherits(try_error, "error"))    # if not an error
+         y <- tolower(x)
+      # result
+      return(y)
+   }
+   
+   # use tryTolower with sapply 
+   sentence <- sapply(sentence, tryTolower)
+
+   # split sentence into words with str_split (stringr package)
+   word.list <- str_split(sentence, "\\s+")
+   words <- unlist(word.list)
+
+   # compare words to the dictionaries of positive & negative terms
+   pos.matches <- match(words, pos.words)
+   neg.matches <- match(words, neg.words)
+
+   # get the position of the matched term or NA
+   # we just want a TRUE/FALSE
+   pos.indx <- pos.matches[!is.na(pos.matches)]
+   neg.indx <- neg.matches[!is.na(neg.matches)]
+   pos.matches <- length(pos.indx)
+   neg.matches <- length(neg.indx)
+
+   # final score
+   score <- sum(pos.matches) - sum(neg.matches)
+   return(list(score, pos.indx, neg.indx))
+}
+
+calcStats <- function(scores) {
+# Calculates stats: Total tweets, # of positive tweets, 
+# average positive score, of neutral tweets, # of negative 
+# tweets, average positive score, output as vector[1:6]. 
+
+# Find totals
+   ntot <- length(scores)
+   npos <- sum(scores > 0)
+   nzero <- sum(scores == 0)
+   nneg <- sum(scores < 0)
+
+# Find averages
+   if (npos != 0) 
+      avpos <- sum(scores[scores > 0]) / npos
+   else
+      avpos <- 0
+   if (nneg != 0) 
+      avneg <- sum(scores[scores < 0]) / nneg
+   else
+      avneg <- 0
+
+   return(c(ntot, npos, nzero, nneg, avpos, avneg))
+}
+
+# Initialize dataframes for tweets and stats
+tweetdf <- data.frame()
+
+# Convert tweet list to data frame
+tweetdf <- twListToDF(tweets)
+
+# Calculate sentiment scores
+scores = laply(tweetdf$text, .fun= function(x) {
+sc1 <- findScore(x, pos, neg); return(sc1[[1]])} )
+
+# Calculate stats
+# stat1 is vector (ntot, npos, nzero, nneg, avpos, avneg)
+stat1 <- calcStats(scores)
+stat1
+
+# Show the tweets gathered
+tweetdf$text
+```
+
+```{r}
+############################################################################
+# Step 7 - Plot pie chart and barplot (Pos, Neut, Neg) ---
+par(mfrow=c(1,2))
+gslices <- c(stat1[2:4])
+glabels <- c("Positive","Neutral","Negative")
+pct <- round(gslices/sum(gslices)*100,1)
+glabels <- paste(glabels, pct)
+glabels <- paste(glabels,"%",sep="")
+gcolors <- c("green","blue","red")
+chart1 <- pie(gslices, labels=glabels, col=gcolors, cex=0.6)
+
+blabels <- c("Positive","Neutral","Negative")
+chart2 <- barplot(gslices, names.arg=blabels, horiz=TRUE, main=paste("Sentiment Score for",keywords),
+        col=gcolors, cex.names=0.8)
+blabels <- paste(gslices, " (", sep="")
+blabels <- paste(blabels, pct)
+blabels <- paste(blabels,"%)", sep="")
+text(chart2, labels=blabels, pos=4)
+```
