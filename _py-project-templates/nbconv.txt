@@ -1,0 +1,5 @@
+jupyter nbconvert --to html py-template-binary-class_example.ipynb
+
+jupyter nbconvert --to html py-template-multi-class_example.ipynb
+
+jupyter nbconvert --to html py-template-regression_example.ipynb
