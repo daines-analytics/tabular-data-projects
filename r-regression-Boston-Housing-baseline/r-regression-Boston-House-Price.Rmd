@@ -1,0 +1,305 @@
+---
+title: "Simple Regression Model for Boston Housing Price"
+author: "David Lowe"
+date: "January 14, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+Credit: Template and study cases were adapted from blog posts made available by Dr. Jason Brownlee of Machine Learning Mastery (http://machinelearningmastery.com/).
+
+For more information on this case study project, please consult Dr. Brownlee's blog post at https://machinelearningmastery.com/regression-machine-learning-tutorial-weka/.
+
+Dataset Used: Housing Values in Suburbs of Boston
+ML Model: Regression, numeric inputs
+Dataset Reference: https://archive.ics.uci.edu/ml/datasets/Housing
+
+The purpose of this project is to analyze a dataset using various machine learning algorithms and to document the steps using a template. The project aims to touch on the following areas:
+
+1. Document a regression predictive modeling problem end-to-end.
+2. Explore data transfomration options for improving model performance
+3. Explore algorithm tuning techniques for improving model performance
+
+The template breaks down a predictive modeling project into 6 common tasks:
+
+1. Define Problem
+2. Summarize Data
+3. Prepare Data
+4. Evaluate Algorithms
+5. Improve Accuracy or Results
+6. Finalize Model and Present Results
+
+## 1. Prepare Problem
+
+### 1.a) Load libraries
+
+```{r}
+library(ggplot2)
+library(mlbench)
+library(caret)
+library(corrplot)
+```
+
+### 1.b) Load dataset
+Attach the BostonHousing dataset
+
+```{r}
+data(BostonHousing)
+```
+
+### 1.c) Split-out validation dataset
+Create a training (variable name "dataset") and a validation (variable name "validation") dataset.
+Create a list of 80% of the rows in the original dataset we can use for training. Select 20% of the data for validation.
+
+```{r}
+set.seed(7)
+validation_index <- createDataPartition(BostonHousing$medv, p=0.80, list=FALSE)
+dataset <- BostonHousing[validation_index,]
+dataset[,'chas'] <- as.numeric(dataset[,'chas'])
+validation <- BostonHousing[-validation_index,]
+validation[,'chas'] <- as.numeric(validation[,'chas'])
+```
+
+## 2. Summarize Data
+To gain a better understanding of the data that we have on-hand, we will leverage a number of descriptive statistics and data visualization techniques. The plan is to use the results to consider new questions, review assumptions, and validate hypotheses that we can investigate later with specialized models.
+
+### 2.a) Descriptive statistics
+
+#### 2.a.i) Dimensions of the dataset.
+
+```{r}
+dim(dataset)
+```
+
+#### 2.a.ii) Types of the attributes.
+
+```{r}
+sapply(dataset, class)
+```
+
+#### 2.a.iii) Peek at the data itself.
+
+```{r}
+head(dataset)
+tail(dataset)
+```
+
+#### 2.a.iv) Statistical summary of all attributes.
+
+```{r}
+summary(dataset)
+```
+
+#### 2.a.v) Convert factor to numeric.
+
+```{r}
+dataset[,4] <- as.numeric(as.character(dataset[,4]))
+```
+
+#### 2.a.vi) summarize correlations between input variables.
+
+```{r}
+cor(dataset[,1:13])
+```
+
+### 2.b) Data visualizations
+
+#### 2.b.i) Univariate plots to better understand each attribute.
+
+```{r}
+# Histograms for each attribute
+par(mfrow=c(2,7))
+for(i in 1:13) {
+	hist(dataset[,i], main=names(dataset)[i])
+}
+```
+
+```{r}
+# Density plot for each attribute
+par(mfrow=c(2,7))
+for(i in 1:13) {
+	plot(density(dataset[,i]), main=names(dataset)[i])
+}
+```
+
+```{r}
+# Boxplots for each attribute
+par(mfrow=c(2,7))
+for(i in 1:13) {
+	boxplot(dataset[,i], main=names(dataset)[i])
+}
+```
+
+#### 2.b.ii) Multivariate plots to better understand the relationships between attributes
+
+```{r}
+# Scatterplot matrix
+pairs(dataset[,1:13])
+```
+
+```{r}
+# Correlation plot
+correlations <- cor(dataset[,1:13])
+corrplot(correlations, method="circle")
+```
+
+## 3. Prepare Data
+Some dataset may require additional preparation activities that will best exposes the structure of the problem and the relationships between the input attributes and the output variable. Some data-prep tasks might include:
+
+* Cleaning data by removing duplicates, marking missing values and even imputing missing values.
+* Feature selection where redundant features may be removed.
+* Data transforms where attributes are scaled or redistributed in order to best expose the structure of the problem later to learning algorithms.
+
+### 3.a) Data Cleaning
+
+### 3.b) Feature Selection
+
+### 3.c) Data Transforms
+
+## 4. Evaluate Algorithms
+After the data-prep, we next work on finding a workable model by evaluating a subset of machine learning algorithms that are good at exploiting the structure of the dataset. The typical evaluation tasks include:
+
+* Defining test options such as cross validation and the evaluation metric to use.
+* Spot checking a suite of linear and nonlinear machine learning algorithms.
+* Comparing the estimated accuracy of algorithms.
+
+For this project, we will evaluate 6 different algorithms:
+
+Linear Algorithms:
+Linear Regression (LR)
+Generalized Linear Regression (GLM)
+Penalized Linear Regression (GLMNET)
+
+Nonliear Algorithms
+Classification and Regression Trees (kNN).
+Support Vector Machines (SVM) with a radial basis function
+k-Nearest Neighbors (KNN)
+
+The random number seed is reset before each run to ensure that the evaluation of each algorithm is performed using the same data splits. It ensures the results are directly comparable.
+
+### 4.a) Evaluate Algorithms: Baseline
+
+```{r}
+# Run algorithms using 10-fold cross validation
+control <- trainControl(method="repeatedcv", number=10, repeats=3)
+metric <- "RMSE"
+# lm
+set.seed(7)
+fit.lm <- train(medv~., data=dataset, method="lm", metric=metric, preProc=c("center", "scale"), trControl=control)
+# GLM
+set.seed(7)
+fit.glm <- train(medv~., data=dataset, method="glm", metric=metric, preProc=c("center", "scale"), trControl=control)
+# GLMNET
+set.seed(7)
+fit.glmnet <- train(medv~., data=dataset, method="glmnet", metric=metric, preProc=c("center", "scale"), trControl=control)
+# SVM
+set.seed(7)
+fit.svm <- train(medv~., data=dataset, method="svmRadial", metric=metric, preProc=c("center", "scale"), trControl=control)
+# CART
+set.seed(7)
+grid <- expand.grid(.cp=c(0, 0.05, 0.1))
+fit.cart <- train(medv~., data=dataset, method="rpart", metric=metric, tuneGrid=grid, preProc=c("center", "scale"), trControl=control)
+# kNN
+set.seed(7)
+fit.knn <- train(medv~., data=dataset, method="knn", metric=metric, preProc=c("center", "scale"), trControl=control)
+# Compare algorithms
+results <- resamples(list(LM=fit.lm, GLM=fit.glm, GLMNET=fit.glmnet, SVM=fit.svm, CART=fit.cart, KNN=fit.knn))
+summary(results)
+dotplot(results)
+```
+
+### 4.b) Evaluate Algorithms: Feature Selection
+
+```{r}
+# remove correlated attributes
+# find attributes that are highly corrected
+set.seed(7)
+cutoff <- 0.70
+correlations <- cor(dataset[,1:13])
+highlyCorrelated <- findCorrelation(correlations, cutoff=cutoff)
+for (value in highlyCorrelated) {
+	print(names(dataset)[value])
+}
+# create a new dataset without highly corrected features
+dataset_features <- dataset[,-highlyCorrelated]
+dim(dataset_features)
+
+# Run algorithms using 10-fold cross validation
+control <- trainControl(method="repeatedcv", number=10, repeats=3)
+metric <- "RMSE"
+# lm
+set.seed(7)
+fit.lm <- train(medv~., data=dataset_features, method="lm", metric=metric, preProc=c("center", "scale"), trControl=control)
+# GLM
+set.seed(7)
+fit.glm <- train(medv~., data=dataset_features, method="glm", metric=metric, preProc=c("center", "scale"), trControl=control)
+# GLMNET
+set.seed(7)
+fit.glmnet <- train(medv~., data=dataset_features, method="glmnet", metric=metric, preProc=c("center", "scale"), trControl=control)
+# SVM
+set.seed(7)
+fit.svm <- train(medv~., data=dataset_features, method="svmRadial", metric=metric, preProc=c("center", "scale"), trControl=control)
+# CART
+set.seed(7)
+grid <- expand.grid(.cp=c(0, 0.05, 0.1))
+fit.cart <- train(medv~., data=dataset_features, method="rpart", metric=metric, tuneGrid=grid, preProc=c("center", "scale"), trControl=control)
+# kNN
+set.seed(7)
+fit.knn <- train(medv~., data=dataset_features, method="knn", metric=metric, preProc=c("center", "scale"), trControl=control)
+# Compare algorithms
+feature_results <- resamples(list(LM=fit.lm, GLM=fit.glm, GLMNET=fit.glmnet, SVM=fit.svm, CART=fit.cart, KNN=fit.knn))
+summary(feature_results)
+dotplot(feature_results)
+```
+
+Comparing the results, we can see the feature selection approach has made the RMSE worse for all algorithms. The coorelated features we had removed were contributing to the accuracy of the models, so we should leave the features intact.
+
+## 5. Improve Accuracy
+After we achieve a short list of machine learning algorithms with good level of accuracy, we can leverage ways to improve the accuracy of the models:
+
+* Search for a combination of parameters for each algorithm using caret that yields the best results.
+* Combine the prediction of multiple models into an ensemble prediction using standalone algorithms or the caretEnsemble package.
+
+For this project, we look at how tuning the SVM algoritm could be helpful for our final model. For future project, we will also look at the ensemble methods for optimizing the model.
+
+### 5.a) Algorithm Tuning
+
+```{r}
+# look at parameters
+print(fit.svm)
+
+# tune SVM sigma and C parametres
+control <- trainControl(method="repeatedcv", number=10, repeats=3)
+metric <- "RMSE"
+set.seed(7)
+grid <- expand.grid(.sigma=c(0.025, 0.05, 0.1, 0.15), .C=seq(1, 10, by=1))
+fit.svm <- train(medv~., data=dataset, method="svmRadial", metric=metric, tuneGrid=grid, preProc=c("center", "scale"), trControl=control)
+print(fit.svm)
+plot(fit.svm)
+```
+
+### 5.b) Ensemble Methods
+
+## 6. Finalize Model
+Once we have narrow down to a model that we believe can make accurate predictions on unseen data, we are ready to finalize it. Finalizing a model may involve sub-tasks such as:
+
+* Using an optimal model tuned to make predictions on unseen data.
+* Creating a standalone model using the tuned parameters
+* Saving an optimal model to file for later use.
+
+### 6.a) Predictions on validation dataset
+
+```{r}
+valY <- validation[,14]
+predictions <- predict(fit.svm, newdata=validation)
+print(RMSE(predictions, valY))
+print(R2(predictions, valY))
+```
+
+### 6.b) Create standalone model on entire training dataset
+
+### 6.c) Save model for later use
