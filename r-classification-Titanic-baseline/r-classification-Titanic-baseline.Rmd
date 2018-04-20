@@ -1,0 +1,231 @@
+---
+title: "Simple Classification of Titanic Dataset, Take 1"
+author: "David Lowe"
+date: "February 10, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction and Preliminary Inforamtion
+Methodology Credit: Adapted from a tutorial made available by Trevor Stephens, Titanic: Getting Started With R (http://trevorstephens.com/kaggle-titanic-tutorial/getting-started-with-r/).
+
+Template Credit: Adapted from a template made available by Dr. Jason Brownlee of Machine Learning Mastery (http://machinelearningmastery.com/).
+
+Data Set Description: https://www.kaggle.com/c/titanic/data
+
+Benchmark References: https://www.kaggle.com/c/titanic/leaderboard
+
+Modeling Approach: binary classification
+
+Working through machine learning problems from end-to-end requires a structured modeling approach. Working problems through a project template can encourage you to think about the problem more critically, to challenge your assumptions, and to get good at all parts of a modeling project.
+
+Any predictive modeling machine learning project can be broken down into about 6 common tasks:
+
+1. Define Problem
+2. Summarize Data
+3. Prepare Data
+4. Evaluate Algorithms
+5. Improve Accuracy or Results
+6. Finalize Model and Present Results
+
+## 1. Prepare Problem
+
+### 1.a) Load libraries
+
+```{r}
+library(caret)
+library(corrplot)
+```
+
+### 1.b) Load dataset
+
+Training Data: https://www.kaggle.com/c/titanic/download/train.csv
+
+Test Data: https://www.kaggle.com/c/titanic/download/test.csv 
+
+```{r}
+setwd("C:/Users/David/DEV/GitHub/r-classification-Titanic-baseline")
+training <- read.csv("train.csv", header=TRUE, sep=",")
+```
+
+### 1.c) Split-out validation dataset
+Create a training (variable name "training") and a validation (variable name "validation") dataset
+
+Normally we have only one dataset to work with. With that single dataset, we would split out a portion for training the model and the rest for validating the model. In a Kaggle competition, two datasets were provided, so there is no need to split the training dataset further.
+
+```{r}
+seed_num <- 8
+validation <- read.csv("test.csv", header=TRUE, sep=",")
+```
+
+## 2. Summarize Data
+To gain a better understanding of the data that we have on-hand, we will leverage a number of descriptive statistics and data visualization techniques. The plan is to use the results to consider new questions, review assumptions, and validate hypotheses that we can investigate later with specialized models.
+
+### 2.a) Descriptive statistics
+
+#### 2.a.i) Dimensions of the dataset.
+
+```{r}
+dim(training)
+```
+
+#### 2.a.ii) Types of the attributes.
+
+```{r}
+sapply(training, class)
+```
+
+#### 2.a.iii) Peek at the data itself.
+
+```{r}
+head(training, n=20)
+```
+
+#### 2.a.iv) Statistical summary of all attributes.
+
+```{r}
+summary(training)
+```
+
+### 2.b) Data visualizations
+
+#### 2.b.i) Univariate plots to better understand each attribute.
+
+Missing data can have a significant impact on modeling. Some algorithms can work with missing data, other algorithms can break or render ineffective with missing data. The "Missingness Map" generated from the Amelia package can give us a peek into the missing data situation.
+
+For this dataset, there are some missing data for the Age column. However, we will leave the Age attribute intact for now and analyze the models to further determine the usefulness of the Age attribute.
+
+```{r}
+library(Amelia)
+missmap(training, col=c("black", "grey"))
+```
+
+#### 2.b.ii) Multivariate plots to better understand the relationships between attributes
+
+Since our dataset have a mixed numerical and categorical data, we will leverage the scatter plot matrix to visualize the relationship between the attributes.
+
+For this dataset, the scatter plots did not reveal any two attribute pair that appeared to be highly correlated. 
+
+```{r}
+pairs(training)
+```
+
+#### 2.b.iii) Examine specific attributes for potential impact to the class attribute
+
+First, checking to see how the gender affected the survival rate
+```{r}
+summary(training$Sex)
+prop.table(table(training$Sex, training$Survived))
+```
+Preliminary conclusion #1: Majority of female passengers survived as expected.
+
+Second, checking to see whether being a child (age < 18) affected the survival rate
+```{r}
+# Create a new attribute column "Child"
+training$Child <- 0
+training$Child[training$Age < 18] <- 1
+aggregate(Survived ~ Child + Sex, data=training, FUN=sum)
+aggregate(Survived ~ Child + Sex, data=training, FUN=length)
+aggregate(Survived ~ Child + Sex, data=training, FUN=function(x) {sum(x)/length(x)})
+```
+Preliminary conclusion #2: The child survival rate did not appear to affect the survival rate within each gender.
+
+Third, checking to see whether the fare or passenger class affected the survival rate
+```{r}
+# Create bins based on fare paid
+training$FareCat <- '30+'
+training$FareCat[training$Fare < 30 & training$Fare >= 20] <- '20-30'
+training$FareCat[training$Fare < 20 & training$Fare >= 10] <- '10-20'
+training$FareCat[training$Fare < 10] <- '<10'
+aggregate(Survived ~ FareCat + Pclass + Sex, data=training, FUN=function(x) {sum(x)/length(x)})
+```
+Preliminary conclusion #3: Females in passenger class #3 and paid over $20 in fare appeared to have significantly lower survival rate comapred to the female survival rate in general.
+
+## 3. Prepare Data
+Some dataset may require additional preparation activities that will best exposes the structure of the problem and the relationships between the input attributes and the output variable. Some data-prep tasks might include:
+
+* Cleaning data by removing duplicates, marking missing values and even imputing missing values.
+* Feature selection where redundant features may be removed.
+* Data transforms where attributes are scaled or redistributed in order to best expose the structure of the problem later to learning algorithms.
+
+For the take #1 version of the project, I chosed to use the data as provided and see how much improvment (in accuracy and ranking) I could achieve.
+
+### 3.a) Data Cleaning
+
+### 3.b) Feature Selection
+
+### 3.c) Data Transforms
+
+## 4. Evaluate Algorithms
+After the data-prep, we next work on finding a workable model by evaluating a subset of machine learning algorithms that are good at exploiting the structure of the dataset. The typical evaluation tasks include:
+
+* Defining test options such as cross validation and the evaluation metric to use.
+* Spot checking a suite of linear and nonlinear machine learning algorithms.
+* Comparing the estimated accuracy of algorithms.
+
+For the take #1 version of the project, I have done a few iterations of generating predictions and submitting them to Kaggle to gather the accuracy metric. The iterations are:
+
+1. Label all passengers dead or the attribute $Survived = 0 (The worst-case scenario)
+2. Label all female passengers survived or the attribute $Survived = 1
+3. Label all female passengers with Pclass=3 and Fare > 20 dead or the attribute $Survived = 0
+
+### 4.a) Test options and evaluation metric
+
+```{r}
+# Iteration #1
+validation$Survived <- rep(0, 418)
+submission <- data.frame(PassengerId=validation$PassengerId, Survived=validation$Survived)
+write.csv(submission, file="submit-iteration1.csv", row.names=FALSE)
+```
+
+```{r}
+# Iteration #2
+validation$Survived[validation$Sex == 'female'] <- 1
+submission <- data.frame(PassengerId=validation$PassengerId, Survived=validation$Survived)
+write.csv(submission, file="submit-iteration2.csv", row.names=FALSE)
+```
+
+```{r}
+# Iteration #3
+validation$Survived[validation$Sex == 'female' & validation$Pclass == 3 & validation$Fare >= 20] <- 0
+submission <- data.frame(PassengerId=validation$PassengerId, Survived=validation$Survived)
+write.csv(submission, file="submit-iteration3.csv", row.names=FALSE)
+```
+
+### 4.b) Spot Check Algorithms
+
+### 4.c) Compare Algorithms
+
+Using the predictions generated from the previous sections, we submitted the predictions to Kaggle for grading.
+
+From iteration #1, we achieved an accuracy rate of 0.62678 and a rank of 9372 out of 9652 (bottom 3%).
+
+From iteration #2, we achieved an accuracy rate of 0.76555 and a rank of 7187 out of 9652 (bottom 25%).
+
+From iteration #3, we achieved an accuracy rate of 0.77990 and a rank of 4786 out of 9652 (49.6% percentile).
+
+## 5. Improve Accuracy
+After we achieve a short list of machine learning algorithms with good level of accuracy, we can leverage ways to improve the accuracy of the models:
+
+* Search for a combination of parameters for each algorithm using caret that yields the best results.
+* Combine the prediction of multiple models into an ensemble prediction using standalone algorithms or the caretEnsemble package.
+
+### 5.a) Algorithm Tuning
+
+### 5.b) Ensembles
+
+## 6. Finalize Model
+Once we have narrow down to a model that we believe can make accurate predictions on unseen data, we are ready to finalize it. Finalizing a model may involve sub-tasks such as:
+
+* Using an optimal model tuned to make predictions on unseen data.
+* Creating a standalone model using the tuned parameters
+* Saving an optimal model to file for later use.
+
+### 6.a) Predictions on validation dataset
+
+### 6.b) Create standalone model on entire training dataset
+
+### 6.c) Save model for later use
