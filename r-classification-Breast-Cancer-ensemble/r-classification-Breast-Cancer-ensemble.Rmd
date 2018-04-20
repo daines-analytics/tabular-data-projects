@@ -1,0 +1,318 @@
+---
+title: "Classification Model for Breast Cancer Wisconsin (Original) Data Set with Ensemble"
+author: "David Lowe"
+date: "January 28, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# R Project Template
+Template Credit: Adapted from template made available by Dr. Jason Brownlee of Machine Learning Mastery (http://machinelearningmastery.com/)
+
+Data Set Description: https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+(Original)
+Benchmark References: https://www.kaggle.com/uciml/breast-cancer-wisconsin-data
+Modeling Approach: binary classification, converting categorical to numerical attributes
+
+Working through machine learning problems from end-to-end requires a structured modeling approach. Working problems through a project template can encourage you to think about the problem more critically, to challenge your assumptions, and to get good at all parts of a modeling project.
+
+Any predictive modeling machine learning project can be broken down into about 6 common tasks:
+
+1. Define Problem
+2. Summarize Data
+3. Prepare Data
+4. Evaluate Algorithms
+5. Improve Accuracy or Results
+6. Finalize Model and Present Results
+
+We will compare several different algorithms and determine which one would yield the best results.
+
+## 1. Prepare Problem
+
+### 1.a) Load libraries
+
+```{r}
+library(mlbench)
+library(caret)
+```
+
+### 1.b) Load dataset
+
+```{r}
+data(BreastCancer)
+```
+
+### 1.c) Split-out validation dataset
+Create a training (variable name "dataset") and a validation (variable name "validation") dataset
+
+```{r}
+seed_num <- 7
+# Split out validation dataset
+# create a list of 80% of the rows in the original dataset we can use for training
+set.seed(seed_num)
+training_index <- createDataPartition(BreastCancer$Class, p=0.80, list=FALSE)
+# select 20% of the data for validation
+validation <- BreastCancer[-training_index,]
+# use the remaining 80% of data to training and testing the models
+dataset <- BreastCancer[training_index,]
+```
+
+```{r}
+# Remove redundant variable Id
+dataset <- dataset[,-1]
+validation <- validation[,-1]
+# convert input values to numeric
+for(i in 1:9) {
+	dataset[,i] <- as.numeric(as.character(dataset[,i]))
+	validation[,i] <- as.numeric(as.character(validation[,i]))
+}
+```
+
+## 2. Summarize Data
+To gain a better understanding of the data that we have on-hand, we will leverage a number of descriptive statistics and data visualization techniques. The plan is to use the results to consider new questions, review assumptions, and validate hypotheses that we can investigate later with specialized models.
+
+### 2.a) Descriptive statistics
+
+#### 2.a.i) Dimensions of the dataset.
+
+```{r}
+dim(dataset)
+```
+
+#### 2.a.ii) Types of the attributes.
+
+```{r}
+sapply(dataset, class)
+```
+
+#### 2.a.iii) Peek at the data itself.
+
+```{r}
+head(dataset, n=20)
+```
+
+#### 2.a.iv) Levels of the class attribute.
+
+#### 2.a.v) Breakdown of the instances in each class.
+
+#### 2.a.vi) Statistical summary of all attributes.
+
+```{r}
+summary(dataset)
+```
+
+### 2.b) Data visualizations
+
+#### 2.b.i) Univariate plots to better understand each attribute.
+
+#### 2.b.ii) Multivariate plots to better understand the relationships between attributes
+
+```{r}
+# class distribution
+cbind(freq=table(dataset$Class), percentage=prop.table(table(dataset$Class))*100)
+
+# summarize correlations between input variables
+complete_cases <- complete.cases(dataset)
+cor(dataset[complete_cases,1:9])
+
+# histograms each attribute
+par(mfrow=c(3,3))
+for(i in 1:9) {
+	hist(dataset[,i], main=names(dataset)[i])
+}
+
+# density plot for each attribute
+par(mfrow=c(3,3))
+complete_cases <- complete.cases(dataset)
+for(i in 1:9) {
+	plot(density(dataset[complete_cases,i]), main=names(dataset)[i])
+}
+
+# boxplots for each attribute
+par(mfrow=c(3,3))
+for(i in 1:9) {
+	boxplot(dataset[,i], main=names(dataset)[i])
+}
+
+# scatterplot matrix
+jittered_x <- sapply(dataset[,1:9], jitter)
+pairs(jittered_x, names(dataset[,1:9]), col=dataset$Class)
+
+# bar plots of each variable by class
+par(mfrow=c(3,3))
+for(i in 1:9) {
+	barplot(table(dataset$Class,dataset[,i]), main=names(dataset)[i], legend.text=unique(dataset$Class))
+}
+```
+
+
+
+## 3. Prepare Data
+Some dataset may require additional preparation activities that will best exposes the structure of the problem and the relationships between the input attributes and the output variable. Some data-prep tasks might include:
+
+* Cleaning data by removing duplicates, marking missing values and even imputing missing values.
+* Feature selection where redundant features may be removed.
+* Data transforms where attributes are scaled or redistributed in order to best expose the structure of the problem later to learning algorithms.
+
+### 3.a) Data Cleaning
+
+### 3.b) Feature Selection
+
+### 3.c) Data Transforms
+
+## 4. Evaluate Algorithms - No Transformation
+After the data-prep, we next work on finding a workable model by evaluating a subset of machine learning algorithms that are good at exploiting the structure of the dataset. The typical evaluation tasks include:
+
+* Defining test options such as cross validation and the evaluation metric to use.
+* Spot checking a suite of linear and nonlinear machine learning algorithms.
+* Comparing the estimated accuracy of algorithms.
+
+### 4.a) Test options and evaluation metric
+
+```{r}
+# 10-fold cross validation with 3 repeats
+control <- trainControl(method="repeatedcv", number=10, repeats=3)
+metric <- "Accuracy"
+```
+
+### 4.b) Generate Models using Algorithms
+
+```{r}
+# No Transformation on the dataset
+# LG
+set.seed(seed_num)
+fit.glm <- train(Class~., data=dataset, method="glm", metric=metric, trControl=control, na.action=na.omit)
+# LDA
+set.seed(seed_num)
+fit.lda <- train(Class~., data=dataset, method="lda", metric=metric, trControl=control, na.action=na.omit)
+# GLMNET
+set.seed(seed_num)
+fit.glmnet <- train(Class~., data=dataset, method="glmnet", metric=metric, trControl=control, na.action=na.omit)
+# KNN
+set.seed(seed_num)
+fit.knn <- train(Class~., data=dataset, method="knn", metric=metric, trControl=control, na.action=na.omit)
+# CART
+set.seed(seed_num)
+fit.cart <- train(Class~., data=dataset, method="rpart", metric=metric, trControl=control, na.action=na.omit)
+# SVM
+set.seed(seed_num)
+fit.svm <- train(Class~., data=dataset, method="svmRadial", metric=metric, trControl=control, na.action=na.omit)
+```
+
+```{r}
+# BoxCox Transformation on the dataset
+# LG
+set.seed(seed_num)
+fit.glm.bx <- train(Class~., data=dataset, method="glm", metric=metric, preProc=c("BoxCox"), trControl=control, na.action=na.omit)
+# LDA
+set.seed(seed_num)
+fit.lda.bx <- train(Class~., data=dataset, method="lda", metric=metric, preProc=c("BoxCox"), trControl=control, na.action=na.omit)
+# GLMNET
+set.seed(seed_num)
+fit.glmnet.bx <- train(Class~., data=dataset, method="glmnet", metric=metric, preProc=c("BoxCox"), trControl=control, na.action=na.omit)
+# KNN
+set.seed(seed_num)
+fit.knn.bx <- train(Class~., data=dataset, method="knn", metric=metric, preProc=c("BoxCox"), trControl=control, na.action=na.omit)
+# CART
+set.seed(seed_num)
+fit.cart.bx <- train(Class~., data=dataset, method="rpart", metric=metric, preProc=c("BoxCox"), trControl=control, na.action=na.omit)
+# SVM
+set.seed(seed_num)
+fit.svm.bx <- train(Class~., data=dataset, method="svmRadial", metric=metric, preProc=c("BoxCox"), trControl=control, na.action=na.omit)
+```
+
+### 4.c) Compare Algorithms
+
+We used the same dataset but with a slight twist in transformation and compared the results. The dataset transformed with BoxCox approach appreaed to get better results from the algorithms. For example, the best-performing algorithm, KNN, did better when applying the BoxCox transformation to pre-process the dataset.  
+
+```{r}
+# No Transformation on the dataset
+results <- resamples(list(LG=fit.glm, LDA=fit.lda, GLMNET=fit.glmnet, KNN=fit.knn, CART=fit.cart, SVM=fit.svm))
+summary(results)
+dotplot(results)
+```
+
+```{r}
+# No Transformation on the dataset
+results <- resamples(list(LG=fit.glm.bx, LDA=fit.lda.bx, GLMNET=fit.glmnet.bx, KNN=fit.knn.bx, CART=fit.cart.bx, SVM=fit.svm.bx))
+summary(results)
+dotplot(results)
+```
+
+## 5. Improve Accuracy
+After we achieve a short list of machine learning algorithms with good level of accuracy, we can leverage ways to improve the accuracy of the models:
+
+* Search for a combination of parameters for each algorithm using caret that yields the best results.
+* Combine the prediction of multiple models into an ensemble prediction using standalone algorithms or the caretEnsemble package.
+
+### 5.a) Algorithm Tuning
+
+```{r}
+# Tuning kNN with BoxCox Transformation
+set.seed(seed_num)
+grid <- expand.grid(.k=seq(1,20,by=1))
+fit.knn <- train(Class~., data=dataset, method="knn", metric=metric, tuneGrid=grid, preProc=c("BoxCox"), trControl=control, na.action=na.omit)
+print(fit.knn)
+plot(fit.knn)
+```
+
+### 5.b) Ensembles
+
+At the same time, we will also look at the ensemble methods to see whether we can optimize the predictive model further. The Random Forest appeared to yield the best accuracy out of the three emsemble models.
+
+```{r}
+# 10-fold cross validation with 3 repeats
+control <- trainControl(method="repeatedcv", number=10, repeats=3)
+metric <- "Accuracy"
+# Bagged CART
+set.seed(seed_num)
+fit.treebag <- train(Class~., data=dataset, method="treebag", metric=metric, trControl=control, na.action=na.omit)
+# Random Forest
+set.seed(seed_num)
+fit.rf <- train(Class~., data=dataset, method="rf", metric=metric, preProc=c("BoxCox"), trControl=control, na.action=na.omit)
+# Stochastic Gradient Boosting
+set.seed(seed_num)
+fit.gbm <- train(Class~., data=dataset, method="gbm", metric=metric, preProc=c("BoxCox"), trControl=control, verbose=FALSE, na.action=na.omit)
+# Compare results
+ensemble_results <- resamples(list(BAG=fit.treebag, RF=fit.rf, GBM=fit.gbm))
+summary(ensemble_results)
+dotplot(ensemble_results)
+```
+
+## 6. Finalize Model
+Once we have narrow down to a model that we believe can make accurate predictions on unseen data, we are ready to finalize it. Finalizing a model may involve sub-tasks such as:
+
+* Using an optimal model tuned to make predictions on unseen data.
+* Creating a standalone model using the tuned parameters
+* Saving an optimal model to file for later use.
+
+For this particular dataset, we will settle on using the KNN algorithm with a K value of 17.
+
+### 6.a) Predictions on validation dataset
+
+```{r}
+# prepare parameters for data transform
+set.seed(seed_num)
+# remove missing values (not allowed in this implementation of knn)
+dataset_nomissing <- dataset[complete.cases(dataset),]
+x <- dataset_nomissing[,1:9]
+preprocessParams <- preProcess(x, method=c("BoxCox"))
+x <- predict(preprocessParams, x)
+
+# prepare the validation dataset
+# remove missing values (not allowed in this implementation of knn)
+validation <- validation[complete.cases(validation),]
+# transform the validation dataset
+validation_x <- predict(preprocessParams, validation[,1:9])
+
+# make predictions
+predictions <- knn3Train(x, validation_x, dataset_nomissing$Class, k=17, prob=FALSE)
+confusionMatrix(predictions, validation$Class)
+```
+
+### 6.b) Create standalone model on entire training dataset
+
+### 6.c) Save model for later use
+
