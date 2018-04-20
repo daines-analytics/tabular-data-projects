@@ -1,0 +1,321 @@
+---
+title: "Ensemble Classification Model for the Sonar Dataset with R"
+author: "David Lowe"
+date: "March 16, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Template Credit: Adapted from template made available by Dr. Jason Brownlee of Machine Learning Mastery (http://machinelearningmastery.com/)
+
+For more information on this case study project, please consult Dr. Brownlee's blog post at https://machinelearningmastery.com/standard-machine-learning-datasets/.
+
+Dataset Used: Connectionist Bench (Sonar, Mines vs. Rocks) Data Set ML Model: Classification, numeric inputs Dataset Reference: https://archive.ics.uci.edu/ml/datasets/Connectionist+Bench+%28Sonar%2C+Mines+vs.+Rocks%29
+
+The Sonar Dataset involves the prediction of whether or not an object is a mine or a rock given the strength of sonar returns at different angles. It is a binary (2-class) classification problem.
+
+CONCLUSION: The baseline performance of predicting the most prevalent class achieved an accuracy of approximately 76.0%. Top results achieved via SVM was approximately 85.06% after a series of tuning. The RandomForest ensemble algorithm, also after tuning, yielded an accuracy of 85.09%. The very slight improvement between RF and SVM was too small to justify the additional processing and tuning required by the ensemble algorithm.
+
+The purpose of this project is to analyze a dataset using various machine learning algorithms and to document the steps using a template. The project aims to touch on the following areas:
+
+1. Document a regression predictive modeling problem end-to-end.
+2. Explore data transformation options for improving model performance
+3. Explore algorithm tuning techniques for improving model performance
+4. Explore using and tuning ensemble methods for improving model performance
+
+Working through machine learning problems from end-to-end requires a structured modeling approach. Working problems through a project template can encourage you to think about the problem more critically, to challenge your assumptions, and to get good at all parts of a modeling project.
+
+Any predictive modeling machine learning project can be broken down into about 6 common tasks:
+
+1. Define Problem
+2. Summarize Data
+3. Prepare Data
+4. Evaluate Algorithms
+5. Improve Accuracy or Results
+6. Finalize Model and Present Results
+
+We will compare several different algorithms and determine which one would yield the best results.
+
+## 1. Prepare Problem
+
+### 1.a) Load libraries
+
+```{r}
+library(mlbench)
+library(caret)
+```
+
+### 1.b) Load dataset
+This steps loads the data file. There are 60 attributes, and each column represents a measurement. Since the columns bear no meaningful information, we will not supply the column names to each attribute.
+
+```{r}
+data(Sonar)
+```
+
+### 1.c) Split-out validation dataset
+Normally, we would create a training (variable name "dataset") and a validation (variable name "validation") dataset. Because this dataset is small, we will opt to test the algorithms with the full set of data and not splitting.
+
+```{r}
+dataset <- Sonar
+```
+
+## 2. Summarize Data
+To gain a better understanding of the data that we have on-hand, we will leverage a number of descriptive statistics and data visualization techniques. The plan is to use the results to consider new questions, review assumptions, and validate hypotheses that we can investigate later with specialized models.
+
+### 2.a) Descriptive statistics
+
+#### 2.a.i) Dimensions of the dataset.
+We have 208 rows of data records with 61 columns of attributes. One of the 61 attributes is the class attribute.
+
+```{r}
+dim(dataset)
+```
+
+#### 2.a.ii) Types of the attributes.
+All attributes in the dataset appears to be numeric.
+
+```{r}
+sapply(dataset, class)
+```
+
+#### 2.a.iii) Peek at the data itself.
+
+```{r}
+head(dataset, n=20)
+```
+
+#### 2.a.iv) Levels of the class attribute.
+
+```{r}
+# split input and output
+x <- dataset[,1:60]
+y <- dataset[,61]
+# class distribution
+cbind(freq=table(y), percentage=prop.table(table(y))*100)
+```
+
+#### 2.a.v) Summarize correlations between input variables.
+
+```{r}
+cor(x)
+```
+
+#### 2.a.vi) Statistical summary of all attributes.
+
+```{r}
+summary(dataset)
+```
+
+### 2.b) Data visualizations
+
+#### 2.b.i) Univariate plots to better understand each attribute.
+
+```{r}
+# Box and whisker plots for each attribute
+scales <- list(x=list(relation="free"), y=list(relation="free"))
+featurePlot(x=x, y=y, plot="box", scales=scales)
+```
+
+#### 2.b.ii) Multivariate plots to better understand the relationships between attributes
+
+```{r}
+# Density plots for each attribute by class value
+featurePlot(x=x, y=y, plot="density", scales=scales)
+```
+
+## 3. Prepare Data
+Some dataset may require additional preparation activities that will best exposes the structure of the problem and the relationships between the input attributes and the output variable. Some data-prep tasks might include:
+
+* Cleaning data by removing duplicates, marking missing values and even imputing missing values.
+* Feature selection where redundant features may be removed.
+* Data transforms where attributes are scaled or redistributed in order to best expose the structure of the problem later to learning algorithms.
+
+### 3.a) Data Cleaning
+
+```{r}
+# Not applicable for this iteration of the project.
+```
+
+### 3.b) Feature Selection
+
+```{r}
+# Not applicable for this iteration of the project.
+```
+
+### 3.c) Data Transforms
+
+```{r}
+dataset[,1:60] <- scale(dataset[,1:60])
+```
+
+## 4. Evaluate Algorithms - No Transformation
+After the data-prep, we next work on finding a workable model by evaluating a subset of machine learning algorithms that are good at exploiting the structure of the dataset. The typical evaluation tasks include:
+
+* Defining test options such as cross validation and the evaluation metric to use.
+* Spot checking a suite of linear and nonlinear machine learning algorithms.
+* Comparing the estimated accuracy of algorithms.
+
+For this project, we will evaluate 6 different algorithms:
+
+Linear Algorithms: Generalized Linear Regression (GLM) and Linear Discriminant Analysis (LDA)
+
+Nonliear Algorithms: Classification and Regression Trees (CART), k-Nearest Neighbors (KNN), and Support Vector Machine (SVM)
+
+The random number seed is reset before each run to ensure that the evaluation of each algorithm is performed using the same data splits. It ensures the results are directly comparable.
+
+### 4.a) Test options and evaluation metric
+
+```{r}
+# Run algorithms using 10-fold cross validation
+control <- trainControl(method="repeatedcv", number=10, repeats=3)
+metricTarget <- "Accuracy"
+```
+
+### 4.b) Generate Models using Algorithms
+
+```{r}
+# GLM
+seed_num <- 7
+set.seed(seed_num)
+fit.glm <- train(Class~., data=dataset, method="glm", metric=metricTarget, trControl=control)
+# LDA
+set.seed(seed_num)
+fit.lda <- train(Class~., data=dataset, method="lda", metric=metricTarget, trControl=control)
+# SVM
+set.seed(seed_num)
+fit.svm <- train(Class~., data=dataset, method="svmRadial", metric=metricTarget, trControl=control)
+# CART
+set.seed(seed_num)
+fit.cart <- train(Class~., data=dataset, method="rpart", metric=metricTarget, trControl=control)
+# kNN
+set.seed(seed_num)
+fit.knn <- train(Class~., data=dataset, method="knn", metric=metricTarget, trControl=control)
+```
+
+### 4.c) Compare Algorithms
+
+We used the same dataset but with a slight twist in transformation and compared the results. The dataset transformed with BoxCox approach appreaed to get better results from the algorithms. For example, the best-performing algorithm, KNN, did better when applying the BoxCox transformation to pre-process the dataset.  
+
+```{r}
+# No Transformation on the dataset
+results <- resamples(list(GLM=fit.glm, LDA=fit.lda, CART=fit.cart, KNN=fit.knn, SVM=fit.svm))
+summary(results)
+dotplot(results)
+```
+
+## 5. Improve Accuracy
+After we achieve a short list of machine learning algorithms with good level of accuracy, we can leverage ways to improve the accuracy of the models:
+
+* Search for a combination of parameters for each algorithm using caret that yields the best results.
+* Combine the prediction of multiple models into an ensemble prediction using standalone algorithms or the caretEnsemble package.
+
+### 5.a) Algorithm Tuning
+Finally, we will tune the best-performing algorithm further and see whether we can get more accuracy out of SVM.
+
+```{r}
+set.seed(seed_num)
+grid <- expand.grid(.sigma=c(0.01,0.025,0.05,0.075,0.1), .C=c(1))
+fit.svm <- train(Class~., data=dataset, method="svmRadial", metric=metricTarget, tuneGrid=grid, trControl=control)
+print(fit.svm)
+```
+
+### 5.b) Ensembles
+In this section, we will explore the use and tuning of RandomForest ensemble algorithm to see whether we can improve the results.
+
+```{r}
+library(randomForest)
+
+# Create model with default paramters
+control <- trainControl(method="repeatedcv", number=10, repeats=3)
+set.seed(seed_num)
+mtry <- sqrt(ncol(x))
+tunegrid <- expand.grid(.mtry=mtry)
+rf_default <- train(Class~., data=dataset, method="rf", metric=metricTarget, tuneGrid=tunegrid, trControl=control)
+print(rf_default)
+
+# Random Search
+control <- trainControl(method="repeatedcv", number=10, repeats=3, search="random")
+set.seed(seed_num)
+mtry <- sqrt(ncol(x))
+rf_random <- train(Class~., data=dataset, method="rf", metric=metricTarget, tuneLength=15, trControl=control)
+print(rf_random)
+plot(rf_random)
+
+# Grid Search
+control <- trainControl(method="repeatedcv", number=10, repeats=3, search="grid")
+set.seed(seed_num)
+tunegrid <- expand.grid(.mtry=c(1:15))
+rf_gridsearch <- train(Class~., data=dataset, method="rf", metric=metricTarget, tuneGrid=tunegrid, trControl=control)
+print(rf_gridsearch)
+plot(rf_gridsearch)
+
+# Manual Search
+control <- trainControl(method="repeatedcv", number=10, repeats=3, search="grid")
+tunegrid <- expand.grid(.mtry=c(sqrt(ncol(x))))
+modellist <- list()
+for (ntree in c(1000, 1500, 2000, 2500)) {
+	set.seed(seed_num)
+	fit <- train(Class~., data=dataset, method="rf", metric=metricTarget, tuneGrid=tunegrid, trControl=control, ntree=ntree)
+	key <- toString(ntree)
+	modellist[[key]] <- fit
+}
+# compare results
+results <- resamples(modellist)
+summary(results)
+dotplot(results)
+```
+
+```{r}
+# Custom Caret Algorithm
+customRF <- list(type = "Classification", library = "randomForest", loop = NULL)
+customRF$parameters <- data.frame(parameter = c("mtry", "ntree"), class = rep("numeric", 2), label = c("mtry", "ntree"))
+customRF$grid <- function(x, y, len = NULL, search = "grid") {}
+customRF$fit <- function(x, y, wts, param, lev, last, weights, classProbs, ...) {
+  randomForest(x, y, mtry = param$mtry, ntree=param$ntree, ...)
+}
+customRF$predict <- function(modelFit, newdata, preProc = NULL, submodels = NULL)
+   predict(modelFit, newdata)
+customRF$prob <- function(modelFit, newdata, preProc = NULL, submodels = NULL)
+   predict(modelFit, newdata, type = "prob")
+customRF$sort <- function(x) x[order(x[,1]),]
+customRF$levels <- function(x) x$classes
+
+# train model
+control <- trainControl(method="repeatedcv", number=10, repeats=3)
+tunegrid <- expand.grid(.mtry=c(1:15), .ntree=c(1000, 1500, 2000, 2500))
+set.seed(seed_num)
+custom <- train(Class~., data=dataset, method=customRF, metric=metricTarget, tuneGrid=tunegrid, trControl=control)
+print(custom)
+max(custom$results$Accuracy)
+plot(custom)
+```
+
+## 6. Finalize Model
+Once we have narrow down to a model that we believe can make accurate predictions on unseen data, we are ready to finalize it. Finalizing a model may involve sub-tasks such as:
+
+* Using an optimal model tuned to make predictions on unseen data.
+* Creating a standalone model using the tuned parameters
+* Saving an optimal model to file for later use.
+
+For this particular dataset, we will settle on using the KNN algorithm with a K value of 17.
+
+### 6.a) Predictions on validation dataset
+
+```{r}
+# Not applicable for this iteration of the project.
+```
+
+### 6.b) Create standalone model on entire training dataset
+
+```{r}
+# Not applicable for this iteration of the project.
+```
+
+### 6.c) Save model for later use
+
+```{r}
+# Not applicable for this iteration of the project.
+```
