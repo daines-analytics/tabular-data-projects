@@ -1,0 +1,264 @@
+---
+title: "Simple Classification Model for Text Messages"
+author: "David Lowe"
+date: "March 7, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction and Preliminary Inforamtion
+Methodology Credit: Re-produced and adapted from a tutorial made available by Anish Singh Walia, Text Message Classification (https://datascienceplus.com/text-message-classification/).
+
+Template Credit: Adapted from a template made available by Dr. Jason Brownlee of Machine Learning Mastery (http://machinelearningmastery.com/).
+
+Data Set Description: https://www.kaggle.com/uciml/sms-spam-collection-dataset
+
+Original Reference: http://www.dt.fee.unicamp.br/~tiago/smsspamcollection/
+
+Modeling Approach: binary classification
+
+The SMS Spam Collection is a set of SMS tagged messages that have been collected for SMS Spam research. It contains one set of SMS messages in English of 5,574 messages, tagged according being ham (legitimate) or spam.
+
+Working through machine learning problems from end-to-end requires a structured modeling approach. Working problems through a project template can encourage you to think about the problem more critically, to challenge your assumptions, and to get good at all parts of a modeling project.
+
+Any predictive modeling machine learning project can be broken down into about 6 common tasks:
+
+1. Define Problem
+2. Summarize Data (Use the word cloud visualization technique for this project)
+3. Prepare Data (Not required for this project)
+4. Evaluate Algorithms (Use Naive Bayes classifier and measure accuracy)
+5. Improve Accuracy or Results
+6. Finalize Model and Present Results
+
+## 1. Prepare Problem
+
+### 1.a) Load libraries
+
+```{r}
+library(quanteda)
+library(RColorBrewer)
+library(ggplot2)
+```
+
+### 1.b) Load dataset
+
+Data: https://www.kaggle.com/uciml/sms-spam-collection-dataset/downloads/spam.csv/1
+
+```{r}
+setwd("C:/Users/David/DEV/GitHub/r-classification-Text-Messages")
+spam <- read.csv("kaggle_spam.csv",header=TRUE, sep=",", quote='\"\"', stringsAsFactors=FALSE)
+
+# Add appropriate labels to the columns.
+names(spam) <- c("type","message")
+```
+
+### 1.c) Split-out validation dataset
+Create a training (variable name ".train") and a test/validation (variable name ".test") dataset
+
+```{r}
+seed_num <- 888
+set.seed(seed_num)
+
+# Randomly shuffle the dataset downloaded from Kaggle
+spam <- spam[sample(nrow(spam)),]
+
+# Split out the training and test/validation datasets
+# create a list of 80% of the rows in the original dataset we can use for training
+train_index <- round(nrow(spam)*0.80)
+spam.train <- spam[1:train_index,]
+
+# Select the remaining 20% of the data for testing and validation
+spam.test <- spam[train_index:nrow(spam),]
+```
+
+## 2. Summarize Data
+To gain a better understanding of the data that we have on-hand, we will leverage a number of descriptive statistics and data visualization techniques. The plan is to use the results to consider new questions, review assumptions, and validate hypotheses that we can investigate later with specialized models.
+
+### 2.a) Descriptive statistics
+
+#### 2.a.i) Dimensions of the dataset.
+
+```{r}
+dim(spam)
+dim(spam.train)
+dim(spam.test)
+```
+
+#### 2.a.ii) Distribution of the class attribute.
+
+```{r}
+table(spam$type)
+```
+
+#### 2.a.iii) Finally, a peek at the data itself.
+
+```{r}
+head(spam, n=10)
+```
+
+### 2.b) Data visualizations
+
+#### 2.b.i) Building the Word Clouds
+
+Use Quanteda's corpus() command to construct a corpus from the text field of our raw data. A corpus is a data structure that holds the documents (text messages in this case) and the text within the documents.
+
+After the corpus is built, we will attach the label field as a document variable to the corpus using the docvars() command. We attach label as a variable directly to our corpus, so we can associate SMS messages with their respective ham/spam label later in the analysis.
+
+```{r}
+# Attach the class labels to the corpus message text
+msg.corpus<-corpus(spam$message)
+docvars(msg.corpus)<-spam$type
+```
+
+#### 2.b.ii) Plotting the Word Clouds
+
+We will subset and filter all the spam text messages from the message corpus. Next, we will generate a document feature matrix (DFM) which is a sparse matrix consisting of the frequency of words that occur in a document. The rows in DFM represent the document. The columns represent the words/terms of the sentence in the document as well as the frequency of its appearance in the document.
+
+```{r}
+# Subset only the spam messages
+spam.plot<-corpus_subset(msg.corpus, docvar1=="spam")
+
+# Create a DFM and Wordcloud
+spam.plot<-dfm(spam.plot, tolower=TRUE, remove_punct=TRUE, remove_twitter=TRUE, remove_numbers=TRUE, remove=stopwords(source="smart"))
+spam.col <- brewer.pal(10, "BrBG")
+textplot_wordcloud(spam.plot, min_count=16, color=spam.col)
+title("Spam Wordcloud", col.main = "grey14")
+```
+
+```{r}
+# Subset only the ham messages
+ham.plot<-corpus_subset(msg.corpus, docvar1=="ham")
+
+# Create a DFM and Wordcloud
+ham.plot<-dfm(ham.plot,tolower=TRUE, remove_punct=TRUE, remove_twitter=TRUE, remove_numbers=TRUE, remove=c("gt", "lt", stopwords(source = "smart")))
+ham.col=brewer.pal(10, "BrBG") 
+textplot_wordcloud(ham.plot, min_count=50, color=ham.col)
+title("Ham Wordcloud", col.main = "grey14")
+```
+
+#### 2.b.iii) Examine specific attributes for potential impact to the class attribute
+
+```{r}
+# Not applicable for this iteration of the project
+```
+
+## 3. Prepare Data
+Some dataset may require additional preparation activities that will best exposes the structure of the problem and the relationships between the input attributes and the output variable. Some data-prep tasks might include:
+
+* Cleaning data by removing duplicates, marking missing values and even imputing missing values.
+* Feature selection where redundant features may be removed.
+* Data transforms where attributes are scaled or redistributed in order to best expose the structure of the problem later to learning algorithms.
+
+### 3.a) Data Cleaning
+
+```{r}
+# Not applicable for this iteration of the project
+```
+
+### 3.b) Feature Selection
+
+```{r}
+# Not applicable for this iteration of the project
+```
+
+### 3.c) Data Transforms
+
+```{r}
+# Not applicable for this iteration of the project
+```
+
+## 4. Evaluate Algorithms
+After the data-prep, we next work on finding a workable model by evaluating a subset of machine learning algorithms that are good at exploiting the structure of the dataset. The typical evaluation tasks include:
+
+* Defining test options such as cross validation and the evaluation metric to use.
+* Spot checking a suite of linear and nonlinear machine learning algorithms.
+* Comparing the estimated accuracy of algorithms.
+
+### 4.a) Test options and evaluation metric
+
+```{r}
+# Not applicable for this iteration of the project
+```
+
+### 4.b) Spot Check Algorithms
+
+For the machine learning algorithm models, we do a quick check of accuracy using just the training data.
+
+```{r}
+# Generate the document freq matrix
+msg.dfm <- dfm(msg.corpus, tolower = TRUE)
+msg.dfm <- dfm_trim(msg.dfm, min_count = 5, min_docfreq = 3)  
+msg.dfm <- dfm_tfidf(msg.dfm) 
+head(msg.dfm)
+
+# Split the training and testing data of dfm 
+msg.dfm.train<-msg.dfm[1:train_index,]
+msg.dfm.test<-msg.dfm[train_index:nrow(spam),]
+
+# Train the predictive model with the Naive Bayes classifier
+nb.classifier <- textmodel_nb(msg.dfm.train,spam.train[,1])
+nb.classifier
+```
+
+### 4.c) Compare Algorithms
+
+```{r}
+# Not applicable for this iteration of the project
+```
+
+## 5. Improve Accuracy
+After we achieve a short list of machine learning algorithms with good level of accuracy, we can leverage ways to improve the accuracy of the models:
+
+* Search for a combination of parameters for each algorithm using caret that yields the best results.
+* Combine the prediction of multiple models into an ensemble prediction using standalone algorithms or the caretEnsemble package.
+
+### 5.a) Algorithm Tuning
+
+```{r}
+# Not applicable for this iteration of the project
+```
+
+### 5.b) Ensembles
+
+```{r}
+# Not applicable for this iteration of the project
+```
+
+## 6. Finalize Model
+Once we have narrow down to a model that we believe can make accurate predictions on unseen data, we are ready to finalize it. Finalizing a model may involve sub-tasks such as:
+
+* Using an optimal model tuned to make predictions on unseen data.
+* Creating a standalone model using the tuned parameters
+* Saving an optimal model to file for later use.
+
+### 6.a) Predictions on validation dataset
+
+Further tune the RandomForest ensemble and try to reach the best-performing parameter.
+
+```{r}
+# Generate a confusion matrix
+pred<-predict(nb.classifier,msg.dfm.test)
+
+# Use pred$nb.predicted to extract the class labels
+table(predicted=pred$nb.predicted,actual=spam.test[,1])
+
+# Display the acccuracy of the classifier on the test/validation data
+mean(pred$nb.predicted==spam.test[,1])*100
+```
+
+From iteration #7, we achieved an accuracy rate of 0.75119, which was worst than the result from iteration #5.
+
+### 6.b) Create standalone model on entire training dataset
+
+```{r}
+# Not applicable for this iteration of the project
+```
+
+### 6.c) Save model for later use
+
+```{r}
+# Not applicable for this iteration of the project
+```
