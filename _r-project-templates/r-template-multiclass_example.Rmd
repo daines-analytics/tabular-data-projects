@@ -1,7 +1,7 @@
 ---
-title: "Simple Multi-Classification Model for [Project Name] Using R version 01.0"
+title: "Simple Multi-Classification Model for [Project Name] Using R version 02.0"
 author: "David Lowe"
-date: "April 13, 2018"
+date: "May 22, 2018"
 output: 
   html_document: 
     toc: yes
@@ -56,6 +56,7 @@ library(corrplot)
 ### 1.b) Load dataset
 
 ```{r}
+startTimeScript <- proc.time()
 #entireDataset <- read.csv2("bank-partial.csv", header= TRUE)
 data(Glass)
 entireDataset <- Glass
@@ -224,6 +225,10 @@ training <- entireDataset[training_index,]
 validation <- entireDataset[-training_index,]
 ```
 
+```{r}
+proc.time()-startTimeScript
+```
+
 ## 4. Model and Evaluate Algorithms
 After the data-prep, we next work on finding a workable model by evaluating a subset of machine learning algorithms that are good at exploiting the structure of the training. The typical evaluation tasks include:
 
@@ -233,7 +238,7 @@ After the data-prep, we next work on finding a workable model by evaluating a su
 
 For this project, we will evaluate one linear, four non-linear, and three ensemble algorithms:
 
-Linear Algorithms: Logistic Regression and Linear Discriminant Analysis
+Linear Algorithm: Linear Discriminant Analysis
 
 Non-Linear Algorithms: Decision Trees (CART), Naive Bayes, k-Nearest Neighbors, and Support Vector Machine
 
@@ -253,34 +258,44 @@ metricTarget <- "Accuracy"
 
 ```{r LDA}
 # Linear Discriminant Analysis (Classification)
+startTimeModule <- proc.time()
 set.seed(seedNum)
 fit.lda <- train(targetVar~., data=training, method="lda", metric=metricTarget, trControl=control)
+proc.time()-startTimeModule
 ```
 
 ### 4.c) Generate models using nonlinear algorithms
 
 ```{r CART}
 # Decision Tree - CART (Regression/Classification)
+startTimeModule <- proc.time()
 set.seed(seedNum)
 fit.cart <- train(targetVar~., data=training, method="rpart", metric=metricTarget, trControl=control)
+proc.time()-startTimeModule
 ```
 
 ```{r NB}
 # Naive Bayes (Classification)
+startTimeModule <- proc.time()
 set.seed(seedNum)
 fit.nb <- train(targetVar~., data=training, method="nb", metric=metricTarget, trControl=control)
+proc.time()-startTimeModule
 ```
 
 ```{r KNN}
 # k-Nearest Neighbors (Regression/Classification)
+startTimeModule <- proc.time()
 set.seed(seedNum)
 fit.knn <- train(targetVar~., data=training, method="knn", metric=metricTarget, trControl=control)
+proc.time()-startTimeModule
 ```
 
 ```{r SVM}
 # Support Vector Machine (Regression/Classification)
+startTimeModule <- proc.time()
 set.seed(seedNum)
 fit.svm <- train(targetVar~., data=training, method="svmRadial", metric=metricTarget, trControl=control)
+proc.time()-startTimeModule
 ```
 
 ### 4.d) Generate models using ensemble algorithms
@@ -288,20 +303,26 @@ In this section, we will explore the use and tuning of ensemble algorithms to se
 
 ```{r BAGCART}
 # Bagged CART (Regression/Classification)
+startTimeModule <- proc.time()
 set.seed(seedNum)
 fit.bagcart <- train(targetVar~., data=training, method="treebag", metric=metricTarget, trControl=control)
+proc.time()-startTimeModule
 ```
 
 ```{r RF}
 # Random Forest (Regression/Classification)
+startTimeModule <- proc.time()
 set.seed(seedNum)
 fit.rf <- train(targetVar~., data=training, method="rf", metric=metricTarget, trControl=control)
+proc.time()-startTimeModule
 ```
 
 ```{r GBM}
 # Stochastic Gradient Boosting (Regression/Classification)
+startTimeModule <- proc.time()
 set.seed(seedNum)
-fit.gbm <- train(targetVar~., data=training, method="gbm", metric=metricTarget, trControl=control)
+fit.gbm <- train(targetVar~., data=training, method="gbm", metric=metricTarget, trControl=control, verbose=F)
+proc.time()-startTimeModule
 ```
 
 ### 4.e) Compare baseline algorithms
@@ -322,29 +343,35 @@ Finally, we will tune the best-performing algorithms from each group further and
 
 ```{r FINAL1}
 # Tuning algorithm #1 - Random Forest
+startTimeModule <- proc.time()
 set.seed(seedNum)
 grid <- expand.grid(mtry = c(1:5))
 fit.final1 <- train(targetVar~., data=training, method="rf", metric=metricTarget, tuneGrid=grid, trControl=control)
 plot(fit.final1)
 print(fit.final1)
+proc.time()-startTimeModule
 ```
 
 ```{r FINAL2}
 # Tuning algorithm #2 - Support Vector Machine
+startTimeModule <- proc.time()
 set.seed(seedNum)
 grid <- expand.grid(sigma = c(.01, .015, 0.2), C = c(0.25, 0.5, 0.75, 1))
 fit.final2 <- train(targetVar~., data=training, method="svmRadial", metric=metricTarget, tuneGrid=grid, trControl=control)
 plot(fit.final2)
 print(fit.final2)
+proc.time()-startTimeModule
 ```
 
 ```{r FINAL3}
 # Tuning algorithm #3 - Stochastic Gradient Boosting
+startTimeModule <- proc.time()
 set.seed(seedNum)
 grid <- expand.grid(.n.trees=c(100, 200, 300), .shrinkage=c(0.01, 0.05, 0.1), .interaction.depth=c(1, 2, 3), .n.minobsinnode=c(3, 6, 10))
-fit.final3 <- train(targetVar~., data=training, method="gbm", metric=metricTarget, tuneGrid=grid, trControl=control)
+fit.final3 <- train(targetVar~., data=training, method="gbm", metric=metricTarget, tuneGrid=grid, trControl=control, verbose=F)
 plot(fit.final3)
 print(fit.final3)
+proc.time()-startTimeModule
 ```
 
 ### 5.d) Compare Algorithms After Tuning
@@ -373,13 +400,19 @@ confusionMatrix(predictions, validation$targetVar)
 
 ```{r}
 library(randomForest)
+startTimeModule <- proc.time()
 set.seed(seedNum)
 finalModel <- randomForest(targetVar~., entireDataset, mtry=2, na.action=na.omit)
 summary(finalModel)
+proc.time()-startTimeModule
 ```
 
 ### 6.c) Save model for later use
 
 ```{r}
 #saveRDS(finalModel, "./finalModel_MultiClass.rds")
+```
+
+```{r}
+proc.time()-startTimeScript
 ```
