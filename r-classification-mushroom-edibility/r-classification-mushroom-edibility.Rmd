@@ -1,0 +1,408 @@
+---
+title: "Binary Classification Model for Edible Mushrooms Using R"
+author: "David Lowe"
+date: "June 15, 2018"
+output: 
+  html_document: 
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Template Credit: Adapted from a template made available by Dr. Jason Brownlee of Machine Learning Mastery (http://machinelearningmastery.com/)
+
+Dataset Used: Mushroom Data Set
+
+Dataset ML Model: Binary classification with categorical attributes
+
+Dataset Reference: https://archive.ics.uci.edu/ml/datasets/Mushroom
+
+One potential source of performance benchmarks: https://www.kaggle.com/uciml/mushroom-classification
+
+INTRODUCTION: This data set includes descriptions of hypothetical samples corresponding to 23 species of gilled mushrooms in the Agaricus and Lepiota Family (pp. 500-525). Each species is identified as definitely edible or definitely poisonous. The Guide, The Audubon Society Field Guide to North American Mushrooms (1981). G. H. Lincoff (Pres.), New York: Alfred A. Knopf, clearly states that there is no simple rule for determining the edibility of a mushroom.
+
+CONCLUSION: The baseline performance of predicting the class variable achieved an average accuracy of 98.65%, which was very encouraging. Four algorithms (Logistic Regression, Random Forest, AdaBoost, and Stochastic Gradient Boosting) yielded the top accuracy result of 100% using the training dataset alone. The training dataset contained 65% of the records from the original dataset (or 5,282 records), whereas the validation dataset had the remainder 35% or 2,842 records.
+
+After applying the validation dataset to the four top training algorithms, all four algorithms continued to perform and achieved the accuracy of 100% with the validation data. Considering the Logistic Regression models required the least amount of training time, the recommendation is to consider using the Logistic Regression model for all future mushroom predictions.
+
+The purpose of this project is to analyze predictions using various machine learning algorithms and to document the steps using a template. Working through machine learning problems from end-to-end requires a structured modeling approach. Working problems through a project template can also encourage us to think about the problem more critically, to challenge our assumptions, and to get proficient at all parts of a modeling project.
+
+The project aims to touch on the following areas:
+
+1. Document a predictive modeling problem end-to-end.
+2. Explore data cleaning and transformation options
+3. Explore non-ensemble and ensemble algorithms for baseline model performance
+4. Explore algorithm tuning techniques for improving model performance
+
+Any predictive modeling machine learning project genrally can be broken down into about six major tasks:
+
+1. Prepare Problem
+2. Summarize Data
+3. Prepare Data
+4. Model and Evaluate Algorithms
+5. Improve Accuracy or Results
+6. Finalize Model and Present Results
+
+## 1. Prepare Problem
+
+### 1.a) Load libraries
+
+```{r}
+library(mlbench)
+library(caret)
+library(corrplot)
+library(ROCR)
+```
+
+### 1.b) Load dataset
+
+```{r}
+startTimeScript <- proc.time()
+entireDataset <- read.csv("mushrooms.csv", header= TRUE)
+
+# Use variable totCol to hold the number of columns in the dataframe
+totCol <- ncol(entireDataset)
+
+# Move and rename the class/target column to a standard label
+heading <- names(entireDataset)
+heading <- heading[-1]
+heading <- c(heading, "class")
+entireDataset <- entireDataset[,heading]
+colnames(entireDataset)[colnames(entireDataset)=="class"] <- "targetVar"
+```
+
+## 2. Summarize Data
+To gain a better understanding of the data that we have on-hand, we will leverage a number of descriptive statistics and data visualization techniques. The plan is to use the results to consider new questions, review assumptions, and validate hypotheses that we can investigate later with specialized models.
+
+### 2.a) Descriptive statistics
+
+#### 2.a.i) Peek at the data itself.
+
+```{r}
+head(entireDataset)
+```
+
+#### 2.a.ii) Dimensions of the dataset.
+
+```{r}
+dim(entireDataset)
+```
+
+#### 2.a.iii) Types of the attributes.
+
+```{r}
+sapply(entireDataset, class)
+```
+
+#### 2.a.iv) Statistical summary of all attributes.
+
+```{r}
+summary(entireDataset)
+```
+
+#### 2.a.v) Summarize the levels of the class attribute.
+
+```{r}
+entireDataset_x <- entireDataset[,1:(totCol-1)]
+entireDataset_y <- entireDataset[,totCol]
+cbind(freq=table(entireDataset_y), percentage=prop.table(table(entireDataset_y))*100)
+```
+
+#### 2.a.vi) Count missing values.
+
+```{r}
+sapply(entireDataset, function(x) sum(is.na(x)))
+```
+
+### 2.b) Data visualizations
+
+#### 2.b.i) Univariate plots to better understand each attribute.
+
+```{r}
+# Set up a variable for the total number of attribute columns (totAttr)
+totAttr <- totCol-1
+# Set up the number of row and columns for visualization display. dispRow * dispCol should be >= totAttr
+dispCol <- 4
+if (totAttr%%dispCol == 0) {
+dispRow <- totAttr%/%dispCol
+} else {
+dispRow <- (totAttr%/%dispCol) + 1
+}
+```
+
+
+```{r}
+# Boxplots for each attribute
+#par(mfrow=c(dispRow,dispCol))
+#for(i in 1:totAttr) {
+#	boxplot(entireDataset[,i], main=names(entireDataset)[i])
+#}
+```
+
+```{r}
+# Histograms each attribute
+#par(mfrow=c(dispRow,dispCol))
+#for(i in 1:totAttr) {
+#	hist(entireDataset[,i], main=names(entireDataset)[i])
+#}
+```
+
+```{r}
+# Density plot for each attribute
+#par(mfrow=c(dispRow,dispCol))
+#for(i in 1:totAttr) {
+#	plot(density(entireDataset[,i]), main=names(entireDataset)[i])
+#}
+```
+
+#### 2.b.ii) Multivariate plots to better understand the relationships between attributes
+
+```{r}
+# Scatterplot matrix colored by class
+#pairs(targetVar~., data=entireDataset, col=entireDataset$targetVar)
+```
+
+```{r}
+# Box and whisker plots for each attribute by class
+#scales <- list(x=list(relation="free"), y=list(relation="free"))
+#featurePlot(x=entireDataset_x, y=entireDataset_y, plot="box", scales=scales)
+```
+
+```{r}
+# Density plots for each attribute by class value
+#featurePlot(x=entireDataset_x, y=entireDataset_y, plot="density", scales=scales)
+```
+
+```{r}
+# Correlation plot
+#correlations <- cor(entireDataset_x)
+#corrplot(correlations, method="circle")
+```
+
+## 3. Prepare Data
+Some dataset may require additional preparation activities that will best exposes the structure of the problem and the relationships between the input attributes and the output variable. Some data-prep tasks might include:
+
+* Cleaning data by removing duplicates, marking missing values and even imputing missing values.
+* Feature selection where redundant features may be removed.
+* Data transforms where attributes are scaled or redistributed in order to best expose the structure of the problem later to learning algorithms.
+
+### 3.a) Data Cleaning
+
+```{r}
+# Not applicable for this iteration of the project.
+
+# Mark missing values
+#invalid <- 0
+#entireDataset$some_col[entireDataset$some_col==invalid] <- NA
+
+# Impute missing values
+#entireDataset$some_col <- with(entireDataset, impute(some_col, mean))
+```
+
+### 3.b) Feature Selection
+
+```{r}
+# Removing the veil.type column since it contains only one value for all rows
+entireDataset$veil.type <- NULL
+```
+
+### 3.c) Data Transforms
+
+```{r}
+# Not applicable for this iteration of the project.
+```
+
+### 3.d) Split-out training and validation datasets
+We create a training dataset (variable name "training") and a validation dataset (variable name "validation").
+
+```{r}
+seedNum <- 888
+set.seed(seedNum)
+
+# Create a list of 80% of the rows in the original dataset we can use for training
+training_index <- createDataPartition(entireDataset$targetVar, p=0.65, list=FALSE)
+
+# Use 65% of data to training and testing the models
+training <- entireDataset[training_index,]
+
+# Select the remaining 35% of the data for validation
+validation <- entireDataset[-training_index,]
+```
+
+```{r}
+proc.time()-startTimeScript
+```
+
+## 4. Model and Evaluate Algorithms
+After the data-prep, we next work on finding a workable model by evaluating a subset of machine learning algorithms that are good at exploiting the structure of the training. The typical evaluation tasks include:
+
+* Defining test options such as cross validation and the evaluation metric to use.
+* Spot checking a suite of linear and nonlinear machine learning algorithms.
+* Comparing the estimated accuracy of algorithms.
+
+For this project, we will evaluate one linear, four non-linear and four ensemble algorithms:
+
+Linear Algorithm: Logistic Regression
+
+Non-Linear Algorithms: Decision Trees (CART), Naive Bayes, k-Nearest Neighbors, and Support Vector Machine
+
+Ensemble Algorithms: Bagged CART, Random Forest, Adaboost, and Stochastic Gradient Boosting
+
+The random number seed is reset before each run to ensure that the evaluation of each algorithm is performed using the same data splits. It ensures the results are directly comparable.
+
+### 4.a) Set test options and evaluation metric
+
+```{r}
+# Run algorithms using 10-fold cross validation
+control <- trainControl(method="repeatedcv", number=10, repeats=3)
+metricTarget <- "Accuracy"
+```
+
+### 4.b) Generate models using linear algorithms
+
+```{r LR}
+# Logistic Regression (Classification)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.glm <- train(targetVar~., data=training, method="glm", metric=metricTarget, trControl=control)
+proc.time()-startTimeModule
+```
+
+### 4.c) Generate models using nonlinear algorithms
+
+```{r CART}
+# Decision Tree - CART (Regression/Classification)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.cart <- train(targetVar~., data=training, method="rpart", metric=metricTarget, trControl=control)
+proc.time()-startTimeModule
+```
+
+```{r NB}
+# Naive Bayes (Classification)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.nb <- train(targetVar~., data=training, method="nb", metric=metricTarget, trControl=control)
+proc.time()-startTimeModule
+```
+
+```{r KNN}
+# k-Nearest Neighbors (Regression/Classification)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.knn <- train(targetVar~., data=training, method="knn", metric=metricTarget, trControl=control)
+proc.time()-startTimeModule
+```
+
+```{r SVM}
+# Support Vector Machine (Regression/Classification)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.svm <- train(targetVar~., data=training, method="svmRadial", metric=metricTarget, trControl=control)
+proc.time()-startTimeModule
+```
+
+### 4.d) Generate models using ensemble algorithms
+In this section, we will explore the use and tuning of ensemble algorithms to see whether we can improve the results.
+
+```{r BAGCART}
+# Bagged CART (Regression/Classification)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.bagcart <- train(targetVar~., data=training, method="treebag", metric=metricTarget, trControl=control)
+proc.time()-startTimeModule
+```
+
+```{r RF}
+# Random Forest (Regression/Classification)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.rf <- train(targetVar~., data=training, method="rf", metric=metricTarget, trControl=control)
+proc.time()-startTimeModule
+```
+
+```{r ADABOOST}
+# AdaBoost (Classification)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.ada <- train(targetVar~., data=training, method="ada", metric=metricTarget, trControl=control)
+proc.time()-startTimeModule
+```
+
+```{r GBM}
+# Stochastic Gradient Boosting (Regression/Classification)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.gbm <- train(targetVar~., data=training, method="gbm", metric=metricTarget, trControl=control, verbose=F)
+proc.time()-startTimeModule
+```
+
+### 4.e) Compare baseline algorithms
+
+```{r SPOT_CHECK}
+results <- resamples(list(LR=fit.glm, CART=fit.cart, NB=fit.nb, kNN=fit.knn, SVM=fit.svm, BagCART=fit.bagcart, RF=fit.rf, AdaBoost=fit.ada, GBM=fit.gbm))
+summary(results)
+dotplot(results)
+```
+
+### 6.a) Predictions on validation dataset
+
+```{r PREDICT_LR}
+predictions.glm <- predict(fit.glm, newdata=validation)
+confusionMatrix(predictions.glm, validation$targetVar)
+
+pred.glm <- prediction(as.numeric(predictions.glm), as.numeric(validation$targetVar))
+perf.glm <- performance(pred.glm, measure = "tpr", x.measure = "fpr")
+plot(perf.glm, colorize=TRUE)
+auc <- performance(pred.glm, measure = "auc")
+auc <- auc@y.values[[1]]
+auc
+```
+
+### 6.a) Predictions on validation dataset
+
+```{r PREDICT_RF}
+predictions.rf <- predict(fit.rf, newdata=validation)
+confusionMatrix(predictions.rf, validation$targetVar)
+
+pred.rf <- prediction(as.numeric(predictions.rf), as.numeric(validation$targetVar))
+perf.rf <- performance(pred.rf, measure = "tpr", x.measure = "fpr")
+plot(perf.rf, colorize=TRUE)
+auc <- performance(pred.rf, measure = "auc")
+auc <- auc@y.values[[1]]
+auc
+```
+
+### 6.a) Predictions on validation dataset
+
+```{r PREDICT_ADA}
+predictions.ada <- predict(fit.ada, newdata=validation)
+confusionMatrix(predictions.ada, validation$targetVar)
+
+pred.ada <- prediction(as.numeric(predictions.ada), as.numeric(validation$targetVar))
+perf.ada <- performance(pred.ada, measure = "tpr", x.measure = "fpr")
+plot(perf.ada, colorize=TRUE)
+auc <- performance(pred.ada, measure = "auc")
+auc <- auc@y.values[[1]]
+auc
+```
+
+### 6.a) Predictions on validation dataset
+
+```{r PREDICT_GBM}
+predictions.gbm <- predict(fit.gbm, newdata=validation)
+confusionMatrix(predictions.gbm, validation$targetVar)
+
+pred.gbm <- prediction(as.numeric(predictions.gbm), as.numeric(validation$targetVar))
+perf.gbm <- performance(pred.gbm, measure = "tpr", x.measure = "fpr")
+plot(perf.gbm, colorize=TRUE)
+auc <- performance(pred.gbm, measure = "auc")
+auc <- auc@y.values[[1]]
+auc
+```
+
+```{r}
+proc.time()-startTimeScript
+```
