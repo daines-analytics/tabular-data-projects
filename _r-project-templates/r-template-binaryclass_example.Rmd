@@ -1,7 +1,7 @@
 ---
-title: "Simple Binary Classification Model for [Project Name] Using R version 02.0"
+title: "Binary Classification Model for [Project Name] Using R version 03.0"
 author: "David Lowe"
-date: "May 22, 2018"
+date: "July 13, 2018"
 output: 
   html_document: 
     toc: yes
@@ -11,21 +11,21 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Template Credit: Adapted from a template made available by Dr. Jason Brownlee of Machine Learning Mastery (http://machinelearningmastery.com/)
+Template Credit: Adapted from a template made available by Dr. Jason Brownlee of Machine Learning Mastery. [http://machinelearningmastery.com/]
 
-Dataset Used: [Dataset Name]
+SUMMARY: [The purpose of this project is to construct a prediction model using various machine learning algorithms and to document the end-to-end steps using a template. The [Dataset Name] is a binary-class classification situation where we are trying to predict one of the two possible outcomes.]
+
+INTRODUCTION: [Sample Paragraph - This dataset is originally from the National Institute of Diabetes and Digestive and Kidney Diseases. The objective of the dataset is to diagnostically predict whether or not a patient has diabetes, based on certain diagnostic measurements included in the dataset. Several constraints were placed on the selection of these instances from a larger database. In particular, all patients here are females at least 21 years old of Pima Indian heritage. The datasets consists of several medical predictor variables and one target variable, Outcome. Predictor variables includes the number of pregnancies the patient has had, their BMI, insulin level, age, and so on.]
+
+CONCLUSION: [Sample Paragraph - The baseline performance of the eight algorithms achieved an average accuracy of 76.07%. Three algorithms (Logistic Regression, Support Vector Machine, and Stochastic Gradient Boosting) achieved the top three accuracy scores after the first round of modeling. After a series of tuning trials, Support Vector Machine turned in the top result using the training data. It achieved an average accuracy of 77.64%. Using the optimized tuning parameter available, the Support Vector Machine algorithm processed the validation dataset with an accuracy of 76.96%, which was slightly below the accuracy of the training data. For this project, the Support Vector Machine ensemble algorithm yielded consistently top-notch training and validation results, which warrant the additional processing required by the algorithm.]
+
+Dataset Used: [Dataset Name - Pima Indians Diabetes Database]
 
 Dataset ML Model: Binary classification with [numerical | categorical] attributes
 
-Dataset Reference: [Dataset URL]
+Dataset Reference: [Dataset URL - https://www.kaggle.com/uciml/pima-indians-diabetes-database]
 
-One source of potential performance benchmarks: [Benchmark URL]
-
-INTRODUCTION: [Sample Paragraph - The dataset involves predicting the onset of diabetes within 5 years given medical details. It is a binary (2-class) classification problem. There are 768 observations with 8 input variables and 1 output variable. Missing values are believed to be encoded with zero values.]
-
-CONCLUSION: [Sample Paragraph - The baseline performance of predicting the class variable achieved an average accuracy of 75.85%. The top accuracy result achieved via Logistic Regression was 77.73% after a series of tuning trials. The ensemble algorithms, in this case, did not yield a better result than the non-ensemble algorithms to justify the additional processing required.]
-
-The purpose of this project is to analyze predictions using various machine learning algorithms and to document the steps using a template. Working through machine learning problems from end-to-end requires a structured modeling approach. Working problems through a project template can also encourage us to think about the problem more critically, to challenge our assumptions, and to get proficient at all parts of a modeling project.
+One potential source of performance benchmarks: [Benchmark URL - https://www.kaggle.com/uciml/pima-indians-diabetes-database]
 
 The project aims to touch on the following areas:
 
@@ -48,25 +48,25 @@ Any predictive modeling machine learning project genrally can be broken down int
 ### 1.a) Load libraries
 
 ```{r}
-library(mlbench)
 library(caret)
 library(corrplot)
 library(ROCR)
+library(mlbench)
 ```
 
 ### 1.b) Load dataset
 
 ```{r}
 startTimeScript <- proc.time()
-#entireDataset <- read.csv("some_dataset.csv", header= TRUE)
+#entireDataset <- read.csv("some_dataset.csv", header= TRUE, stringsAsFactors = FALSE)
 data(PimaIndiansDiabetes)
 entireDataset <- PimaIndiansDiabetes
 
-# Use variable totCol to hold the number of columns in the dataframe
-totCol <- ncol(entireDataset)
-
 # Rename the class/target column to a standard label
 colnames(entireDataset)[ncol(entireDataset)] <- "targetVar"
+
+# Use variable totCol to hold the number of columns in the dataframe
+totCol <- ncol(entireDataset)
 ```
 
 ## 2. Summarize Data
@@ -120,12 +120,13 @@ sapply(entireDataset, function(x) sum(is.na(x)))
 # Set up a variable for the total number of attribute columns (totAttr)
 totAttr <- totCol-1
 # Set up the number of row and columns for visualization display. dispRow * dispCol should be >= totAttr
-dispCol <- 4
+dispCol <- 5
 if (totAttr%%dispCol == 0) {
 dispRow <- totAttr%/%dispCol
 } else {
 dispRow <- (totAttr%/%dispCol) + 1
 }
+cat("Will attempt to create graphics grid (col x row): ", dispCol, ' by ', dispRow)
 ```
 
 
@@ -216,13 +217,13 @@ We create a training dataset (variable name "training") and a validation dataset
 seedNum <- 888
 set.seed(seedNum)
 
-# Create a list of 80% of the rows in the original dataset we can use for training
-training_index <- createDataPartition(entireDataset$targetVar, p=0.80, list=FALSE)
+# Create a list of the rows in the original dataset we can use for training
+training_index <- createDataPartition(entireDataset$targetVar, p=0.70, list=FALSE)
 
-# Use 80% of data to training and testing the models
+# Use 70% of data to training and testing the models
 training <- entireDataset[training_index,]
 
-# Select the remaining 20% of the data for validation
+# Select the remaining 30% of the data for validation
 validation <- entireDataset[-training_index,]
 ```
 
@@ -237,11 +238,11 @@ After the data-prep, we next work on finding a workable model by evaluating a su
 * Spot checking a suite of linear and nonlinear machine learning algorithms.
 * Comparing the estimated accuracy of algorithms.
 
-For this project, we will evaluate one linear, four non-linear and four ensemble algorithms:
+For this project, we will evaluate one linear, three non-linear, and four ensemble algorithms:
 
 Linear Algorithm: Logistic Regression
 
-Non-Linear Algorithms: Decision Trees (CART), Naive Bayes, k-Nearest Neighbors, and Support Vector Machine
+Non-Linear Algorithms: Decision Trees (CART), k-Nearest Neighbors, and Support Vector Machine
 
 Ensemble Algorithms: Bagged CART, Random Forest, Adaboost, and Stochastic Gradient Boosting
 
@@ -260,7 +261,6 @@ metricTarget <- "Accuracy"
 ```{r LR}
 # Logistic Regression (Classification)
 startTimeModule <- proc.time()
-proc.time()-startTimeModule
 set.seed(seedNum)
 fit.glm <- train(targetVar~., data=training, method="glm", metric=metricTarget, trControl=control)
 proc.time()-startTimeModule
@@ -273,14 +273,6 @@ proc.time()-startTimeModule
 startTimeModule <- proc.time()
 set.seed(seedNum)
 fit.cart <- train(targetVar~., data=training, method="rpart", metric=metricTarget, trControl=control)
-proc.time()-startTimeModule
-```
-
-```{r NB}
-# Naive Bayes (Classification)
-startTimeModule <- proc.time()
-set.seed(seedNum)
-fit.nb <- train(targetVar~., data=training, method="nb", metric=metricTarget, trControl=control)
 proc.time()-startTimeModule
 ```
 
@@ -338,7 +330,7 @@ proc.time()-startTimeModule
 ### 4.e) Compare baseline algorithms
 
 ```{r SPOT_CHECK}
-results <- resamples(list(LR=fit.glm, CART=fit.cart, NB=fit.nb, kNN=fit.knn, SVM=fit.svm, BagCART=fit.bagcart, RF=fit.rf, AdaBoost=fit.ada, GBM=fit.gbm))
+results <- resamples(list(LR=fit.glm, CART=fit.cart, kNN=fit.knn, SVM=fit.svm, BagCART=fit.bagcart, RF=fit.rf, AdaBoost=fit.ada, GBM=fit.gbm))
 summary(results)
 dotplot(results)
 ```
@@ -376,7 +368,7 @@ proc.time()-startTimeModule
 # Tuning algorithm #3 - Stochastic Gradient Boosting
 startTimeModule <- proc.time()
 set.seed(seedNum)
-grid <- expand.grid(.n.trees=c(100, 200, 300), .shrinkage=c(0.01, 0.05, 0.1), .interaction.depth=c(1, 2, 3), .n.minobsinnode=c(3, 6, 10))
+grid <- expand.grid(.n.trees=c(50, 100, 200), .shrinkage=c(0.01, 0.05, 0.1), .interaction.depth=c(1, 2, 3), .n.minobsinnode=c(3, 5, 7))
 fit.final3 <- train(targetVar~., data=training, method="gbm", metric=metricTarget, tuneGrid=grid, trControl=control, verbose=F)
 plot(fit.final3)
 print(fit.final3)
@@ -414,10 +406,11 @@ auc
 
 ### 6.b) Create standalone model on entire training dataset
 
-```{r}
+```{r FINALMODEL}
 startTimeModule <- proc.time()
 set.seed(seedNum)
-finalModel <- glm(targetVar~., data=entireDataset, family="binomial")
+grid <- expand.grid(sigma = 0.015, C = 1)
+finalModel <- train(targetVar~., data=entireDataset, method="svmRadial", metric=metricTarget, tuneGrid=grid, trControl=control)
 print(finalModel)
 proc.time()-startTimeModule
 ```

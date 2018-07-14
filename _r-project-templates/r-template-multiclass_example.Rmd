@@ -1,7 +1,7 @@
 ---
-title: "Simple Multi-Classification Model for [Project Name] Using R version 02.0"
+title: "Multi-Class Classification Model for [Project Name] Using R version 03.0"
 author: "David Lowe"
-date: "May 22, 2018"
+date: "July 13, 2018"
 output: 
   html_document: 
     toc: yes
@@ -11,21 +11,21 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Template Credit: Adapted from a template made available by Dr. Jason Brownlee of Machine Learning Mastery (http://machinelearningmastery.com/)
+Template Credit: Adapted from a template made available by Dr. Jason Brownlee of Machine Learning Mastery. [http://machinelearningmastery.com/]
 
-Dataset Used: [Dataset Name]
+SUMMARY: [The purpose of this project is to construct a prediction model using various machine learning algorithms and to document the end-to-end steps using a template. The [Dataset Name] is a multi-class classification situation where we are trying to predict one of the several possible outcomes.]
 
-Dataset ML Model: Multi-classification with [numerical | categorical] attributes
+INTRODUCTION: [Sample Paragraph - The dataset involves predicting, from USA Forensic Science Service, six types of glass; defined in terms of their oxide content (i.e. Na, Fe, K, etc). The study of classification of types of glass was also partly motivated by criminological investigation. At the scene of the crime, the glass left can be used as evidence...if it is correctly identified!]
 
-Dataset Reference: [Dataset URL]
+CONCLUSION: [Sample Paragraph - The baseline performance of the eight algorithms achieved an average accuracy of 69.64%. Three algorithms (Bagged CART, Random Forest, and Stochastic Gradient Boosting) achieved the top three accuracy scores after the first round of modeling. After a series of tuning trials, Random Forest turned in the top result using the training data. It achieved an average accuracy of 78.04%. Using the optimized tuning parameter available, the Random Forest algorithm processed the validation dataset with an accuracy of 78.69%, which was even better the accuracy of the training data. For this project, the Random Forest ensemble algorithm yielded consistently top-notch training and validation results, which warrant the additional processing required by the algorithm.]
 
-One source of potential performance benchmarks: [Benchmark URL]
+Dataset Used: [Dataset Name - Glass Identification Dataset]
 
-INTRODUCTION: [Sample Paragraph - The dataset involves predicting the onset of diabetes within 5 years given medical details. It is a binary (2-class) classification problem. There are 768 observations with 8 input variables and 1 output variable. Missing values are believed to be encoded with zero values.]
+Dataset ML Model: Multi-class classification with [numerical | categorical] attributes
 
-CONCLUSION: [Sample Paragraph - The baseline performance of predicting the class variable achieved an average accuracy of 75.85%. The top accuracy result achieved via Logistic Regression was 77.73% after a series of tuning trials. The ensemble algorithms, in this case, did not yield a better result than the non-ensemble algorithms to justify the additional processing required.]
+Dataset Reference: [Dataset URL - https://archive.ics.uci.edu/ml/datasets/glass+identification]
 
-The purpose of this project is to analyze predictions using various machine learning algorithms and to document the steps using a template. Working through machine learning problems from end-to-end requires a structured modeling approach. Working problems through a project template can also encourage us to think about the problem more critically, to challenge our assumptions, and to get proficient at all parts of a modeling project.
+One potential source of performance benchmarks: [Benchmark URL - https://www.kaggle.com/uciml/glass]
 
 The project aims to touch on the following areas:
 
@@ -48,24 +48,24 @@ Any predictive modeling machine learning project genrally can be broken down int
 ### 1.a) Load libraries
 
 ```{r}
-library(mlbench)
 library(caret)
 library(corrplot)
+library(mlbench)
 ```
 
 ### 1.b) Load dataset
 
 ```{r}
 startTimeScript <- proc.time()
-#entireDataset <- read.csv2("bank-partial.csv", header= TRUE)
+#entireDataset <- read.csv("some_dataset.csv", header= TRUE, stringsAsFactors = FALSE)
 data(Glass)
 entireDataset <- Glass
 
-# Use variable totCol to hold the number of columns in the dataframe
-totCol <- ncol(entireDataset)
-
 # Rename the class column/target to a standard label
 colnames(entireDataset)[ncol(entireDataset)] <- "targetVar"
+
+# Use variable totCol to hold the number of columns in the dataframe
+totCol <- ncol(entireDataset)
 ```
 
 ## 2. Summarize Data
@@ -119,12 +119,13 @@ sapply(entireDataset, function(x) sum(is.na(x)))
 # Set up a variable for the total number of attribute columns (totAttr)
 totAttr <- totCol-1
 # Set up the number of row and columns for visualization display. dispRow * dispCol should be >= totAttr
-dispCol <- 3
+dispCol <- 5
 if (totAttr%%dispCol == 0) {
 dispRow <- totAttr%/%dispCol
 } else {
 dispRow <- (totAttr%/%dispCol) + 1
 }
+cat("Will attempt to create graphics grid (col x row): ", dispCol, ' by ', dispRow)
 ```
 
 
@@ -215,13 +216,13 @@ We create a training dataset (variable name "training") and a validation dataset
 seedNum <- 888
 set.seed(seedNum)
 
-# Create a list of 80% of the rows in the original dataset we can use for training
-training_index <- createDataPartition(entireDataset$targetVar, p=0.80, list=FALSE)
+# Create a list of the rows in the original dataset we can use for training
+training_index <- createDataPartition(entireDataset$targetVar, p=0.70, list=FALSE)
 
-# Use 80% of data to training and testing the models
+# Use 70% of data to training and testing the models
 training <- entireDataset[training_index,]
 
-# Select the remaining 20% of the data for validation
+# Select the remaining 30% of the data for validation
 validation <- entireDataset[-training_index,]
 ```
 
@@ -236,11 +237,11 @@ After the data-prep, we next work on finding a workable model by evaluating a su
 * Spot checking a suite of linear and nonlinear machine learning algorithms.
 * Comparing the estimated accuracy of algorithms.
 
-For this project, we will evaluate one linear, four non-linear, and three ensemble algorithms:
+For this project, we will evaluate one linear, three non-linear, and three ensemble algorithms:
 
 Linear Algorithm: Linear Discriminant Analysis
 
-Non-Linear Algorithms: Decision Trees (CART), Naive Bayes, k-Nearest Neighbors, and Support Vector Machine
+Non-Linear Algorithms: Decision Trees (CART), k-Nearest Neighbors, and Support Vector Machine
 
 Ensemble Algorithms: Bagged CART, Random Forest, and Stochastic Gradient Boosting
 
@@ -271,14 +272,6 @@ proc.time()-startTimeModule
 startTimeModule <- proc.time()
 set.seed(seedNum)
 fit.cart <- train(targetVar~., data=training, method="rpart", metric=metricTarget, trControl=control)
-proc.time()-startTimeModule
-```
-
-```{r NB}
-# Naive Bayes (Classification)
-startTimeModule <- proc.time()
-set.seed(seedNum)
-fit.nb <- train(targetVar~., data=training, method="nb", metric=metricTarget, trControl=control)
 proc.time()-startTimeModule
 ```
 
@@ -328,7 +321,7 @@ proc.time()-startTimeModule
 ### 4.e) Compare baseline algorithms
 
 ```{r SPOT_CHECK}
-results <- resamples(list(LDA=fit.lda, CART=fit.cart, NB=fit.nb, kNN=fit.knn, SVM=fit.svm, BagCART=fit.bagcart, RF=fit.rf, GBM=fit.gbm))
+results <- resamples(list(LDA=fit.lda, CART=fit.cart, kNN=fit.knn, SVM=fit.svm, BagCART=fit.bagcart, RF=fit.rf, GBM=fit.gbm))
 summary(results)
 dotplot(results)
 ```
@@ -342,22 +335,20 @@ Using the three best-perfoming algorithms from the previous section, we will Sea
 Finally, we will tune the best-performing algorithms from each group further and see whether we can get more accuracy out of them.
 
 ```{r FINAL1}
-# Tuning algorithm #1 - Random Forest
+# Tuning algorithm #1 - Bagged CART
 startTimeModule <- proc.time()
 set.seed(seedNum)
-grid <- expand.grid(mtry = c(1:5))
-fit.final1 <- train(targetVar~., data=training, method="rf", metric=metricTarget, tuneGrid=grid, trControl=control)
-plot(fit.final1)
+fit.final1 <- fit.bagcart
 print(fit.final1)
 proc.time()-startTimeModule
 ```
 
 ```{r FINAL2}
-# Tuning algorithm #2 - Support Vector Machine
+# Tuning algorithm #2 - Random Forest
 startTimeModule <- proc.time()
 set.seed(seedNum)
-grid <- expand.grid(sigma = c(.01, .015, 0.2), C = c(0.25, 0.5, 0.75, 1))
-fit.final2 <- train(targetVar~., data=training, method="svmRadial", metric=metricTarget, tuneGrid=grid, trControl=control)
+grid <- expand.grid(mtry = c(1:5))
+fit.final2 <- train(targetVar~., data=training, method="rf", metric=metricTarget, tuneGrid=grid, trControl=control)
 plot(fit.final2)
 print(fit.final2)
 proc.time()-startTimeModule
@@ -377,7 +368,7 @@ proc.time()-startTimeModule
 ### 5.d) Compare Algorithms After Tuning
 
 ```{r POST_TUNING}
-results <- resamples(list(RF=fit.final1, SVM=fit.final2, GBM=fit.final3))
+results <- resamples(list(BAGCART=fit.final1, RF=fit.final2, GBM=fit.final3))
 summary(results)
 dotplot(results)
 ```
@@ -392,7 +383,7 @@ Once we have narrow down to a model that we believe can make accurate prediction
 ### 6.a) Predictions on validation dataset
 
 ```{r PREDICT}
-predictions <- predict(fit.final1, newdata=validation)
+predictions <- predict(fit.final2, newdata=validation)
 confusionMatrix(predictions, validation$targetVar)
 ```
 
@@ -402,7 +393,7 @@ confusionMatrix(predictions, validation$targetVar)
 library(randomForest)
 startTimeModule <- proc.time()
 set.seed(seedNum)
-finalModel <- randomForest(targetVar~., entireDataset, mtry=2, na.action=na.omit)
+finalModel <- randomForest(targetVar~., entireDataset, mtry=4, na.action=na.omit)
 summary(finalModel)
 proc.time()-startTimeModule
 ```

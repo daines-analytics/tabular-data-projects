@@ -1,7 +1,7 @@
 ---
-title: "Simple Regression Model for [Project Name] Using R version 02.0"
+title: "Regression Model for [Project Name] Using R version 03.0"
 author: "David Lowe"
-date: "May 22, 2018"
+date: "July 13, 2018"
 output: 
   html_document: 
     toc: yes
@@ -11,21 +11,21 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Template Credit: Adapted from a template made available by Dr. Jason Brownlee of Machine Learning Mastery (http://machinelearningmastery.com/)
+Template Credit: Adapted from a template made available by Dr. Jason Brownlee of Machine Learning Mastery. [http://machinelearningmastery.com/]
 
-Dataset Used: [Dataset Name]
+SUMMARY: [The purpose of this project is to construct a prediction model using various machine learning algorithms and to document the end-to-end steps using a template. The [Dataset Name] is a regression situation where we are trying to predict a real-number value for a given set of criteria.]
+
+INTRODUCTION: [Sample Paragraph - The dataset for this project originates from the UCI Machine Learning Repository. The Boston housing data was collected in 1978 and each of the 506 entries represent aggregated data about 14 features for homes from various suburbs in Boston, Massachusetts.]
+
+CONCLUSION: [Sample Paragraph - The baseline performance of the seven algorithms achieved an average RMSE of 4.4119. Three algorithms (Bagged CART, Random Forest, and Stochastic Gradient Boosting) achieved the top three RMSE scores after the first round of modeling. After a series of tuning trials, Stochastic Gradient Boosting turned in the top result using the training data. It achieved an average RMSE of 2.7923. Using the optimized tuning parameter available, the Stochastic Gradient Boosting algorithm processed the validation dataset with a RMSE of 3.5912, which was slightly below the accuracy of the training data. For this project, the Stochastic Gradient Boosting ensemble algorithm yielded consistently top-notch training and validation results, which warrant the additional processing required by the algorithm.]
+
+Dataset Used: [Dataset Name - Boston Housing]
 
 Dataset ML Model: Regression with [numerical | categorical] attributes
 
-Dataset Reference: [Dataset URL]
+Dataset Reference: [Dataset URL - https://archive.ics.uci.edu/ml/datasets/housing]
 
-For performance benchmarks, please consult: [Benchmark URL]
-
-INTRODUCTION: [Sample Paragraph - The Pima Indians Diabetes Dataset involves predicting the onset of diabetes within 5 years in Pima Indians given medical details. It is a binary (2-class) classification problem. There are 768 observations with 8 input variables and 1 output variable. Missing values are believed to be encoded with zero values.]
-
-CONCLUSION: [Sample Paragraph - The baseline performance of predicting the class variable achieved an average accuracy of 75.85%. The top accuracy result achieved via Logistic Regression was 77.73% after a series of tuning trials. The ensemble algorithms, in this case, did not yield a better result than the non-ensemble algorithms to justify the additional processing required.]
-
-The purpose of this project is to analyze predictions using various machine learning algorithms and to document the steps using a template. Working through machine learning problems from end-to-end requires a structured modeling approach. Working problems through a project template can also encourage us to think about the problem more critically, to challenge our assumptions, and to get proficient at all parts of a modeling project.
+One potential source of performance benchmark: [Benchmark URL - https://www.kaggle.com/c/boston-housing]
 
 The project aims to touch on the following areas:
 
@@ -48,24 +48,27 @@ Any predictive modeling machine learning project genrally can be broken down int
 ### 1.a) Load libraries
 
 ```{r}
-library(mlbench)
 library(caret)
 library(corrplot)
+library(mlbench)
 ```
 
 ### 1.b) Load dataset
 
 ```{r}
 startTimeScript <- proc.time()
-#entireDataset <- read.csv2("bank-partial.csv", header= TRUE)
+#entireDataset <- read.csv("some_dataset.csv", header= TRUE, stringsAsFactors = FALSE)
 data(BostonHousing)
 entireDataset <- BostonHousing
 
-# Use variable totCol to hold the number of columns in the dataframe
-totCol <- ncol(entireDataset)
+# This particular dataset requires some data transformation prior to calculating the correlations
+entireDataset[,'chas'] <- as.numeric(entireDataset[,'chas'])
 
 # Rename the class/target column to a standard label
 colnames(entireDataset)[ncol(entireDataset)] <- "targetVar"
+
+# Use variable totCol to hold the number of columns in the dataframe
+totCol <- ncol(entireDataset)
 ```
 
 ## 2. Summarize Data
@@ -97,15 +100,7 @@ sapply(entireDataset, class)
 summary(entireDataset)
 ```
 
-#### 2.a.v) Summarize the levels of the class attribute.
-
-```{r}
-#entireDataset_x <- entireDataset[,1:(totCol-1)]
-#entireDataset_y <- entireDataset[,totCol]
-#cbind(freq=table(entireDataset_y), percentage=prop.table(table(entireDataset_y))*100)
-```
-
-#### 2.a.vi) Count missing values.
+#### 2.a.v) Count missing values.
 
 ```{r}
 sapply(entireDataset, function(x) sum(is.na(x)))
@@ -113,23 +108,18 @@ sapply(entireDataset, function(x) sum(is.na(x)))
 
 ### 2.b) Data visualizations
 
-#### 2.b.i) Univariate plots to better understand each attribute.
-
 ```{r}
 # Set up a variable for the total number of attribute columns (totAttr)
 totAttr <- totCol-1
 # Set up the number of row and columns for visualization display. dispRow * dispCol should be >= totAttr
-dispCol <- 7
+dispCol <- 5
 if (totAttr%%dispCol == 0) {
 dispRow <- totAttr%/%dispCol
 } else {
 dispRow <- (totAttr%/%dispCol) + 1
 }
-
-# This particular dataset requires some data transformation prior to calculating the correlations
-entireDataset[,'chas'] <- as.numeric(entireDataset[,'chas'])
+cat("Will attempt to create graphics grid (col x row): ", dispCol, ' by ', dispRow)
 ```
-
 
 ```{r}
 # Boxplots for each attribute
@@ -153,25 +143,6 @@ par(mfrow=c(dispRow,dispCol))
 for(i in 1:totAttr) {
 	plot(density(entireDataset[,i]), main=names(entireDataset)[i])
 }
-```
-
-#### 2.b.ii) Multivariate plots to better understand the relationships between attributes
-
-```{r}
-# Scatterplot matrix colored by class
-pairs(entireDataset[,1:totAttr])
-#pairs(targetVar~., data=entireDataset, col=training$targetVar)
-```
-
-```{r}
-# Box and whisker plots for each attribute by class
-#scales <- list(x=list(relation="free"), y=list(relation="free"))
-#featurePlot(x=entireDataset_x, y=entireDataset_y, plot="box", scales=scales)
-```
-
-```{r}
-# Density plots for each attribute by class value
-#featurePlot(x=entireDataset_x, y=entireDataset_y, plot="density", scales=scales)
 ```
 
 ```{r}
@@ -219,13 +190,13 @@ We create a training dataset (variable name "training") and a validation dataset
 seedNum <- 888
 set.seed(seedNum)
 
-# Create a list of 80% of the rows in the original dataset we can use for training
-training_index <- createDataPartition(entireDataset$targetVar, p=0.80, list=FALSE)
+# Create a list of the rows in the original dataset we can use for training
+training_index <- createDataPartition(entireDataset$targetVar, p=0.70, list=FALSE)
 
-# Use 80% of data to training and testing the models
+# Use 70% of data to training and testing the models
 training <- entireDataset[training_index,]
 
-# Select the remaining 20% of the data for validation
+# Select the remaining 30% of the data for validation
 validation <- entireDataset[-training_index,]
 ```
 
@@ -240,7 +211,7 @@ After the data-prep, we next work on finding a workable model by evaluating a su
 * Spot checking a suite of linear and nonlinear machine learning algorithms.
 * Comparing the estimated accuracy of algorithms.
 
-For this project, we will evaluate one linear, three non-linear and three ensemble algorithms:
+For this project, we will evaluate one linear, three non-linear, and three ensemble algorithms:
 
 Linear Algorithm: Linear Regression
 
@@ -363,7 +334,7 @@ proc.time()-startTimeModule
 # Tuning algorithm #3 - Stochastic Gradient Boosting
 startTimeModule <- proc.time()
 set.seed(seedNum)
-grid <- expand.grid(.n.trees=c(100, 200, 300), .shrinkage=c(0.01, 0.05, 0.1), .interaction.depth=c(1, 2, 3), .n.minobsinnode=c(3, 6, 10))
+grid <- expand.grid(.n.trees=c(250, 400, 550), .shrinkage=c(0.01, 0.05, 0.1), .interaction.depth=c(1, 2, 3), .n.minobsinnode=c(1, 3, 5))
 fit.final3 <- train(targetVar~., data=training, method="gbm", metric=metricTarget, tuneGrid=grid, trControl=control, verbose=F)
 plot(fit.final3)
 print(fit.final3)
@@ -388,7 +359,7 @@ Once we have narrow down to a model that we believe can make accurate prediction
 ### 6.a) Predictions on validation dataset
 
 ```{r PREDICT}
-predictions <- predict(fit.final1, newdata=validation)
+predictions <- predict(fit.final3, newdata=validation)
 valY <- validation[,totCol]
 print(RMSE(predictions, valY))
 print(R2(predictions, valY))
@@ -396,11 +367,11 @@ print(R2(predictions, valY))
 
 ### 6.b) Create standalone model on entire training dataset
 
-```{r}
-library(randomForest)
+```{r FINALMODEL}
 startTimeModule <- proc.time()
 set.seed(seedNum)
-finalModel <- randomForest(targetVar~., entireDataset, mtry=5, na.action=na.omit)
+grid <- expand.grid(.n.trees=400, .interaction.depth=3, .shrinkage=0.1, .n.minobsinnode=1)
+finalModel <- train(targetVar~., data=entireDataset, method="gbm", metric=metricTarget, tuneGrid=grid, trControl=control, verbose=F)
 summary(finalModel)
 proc.time()-startTimeModule
 ```
