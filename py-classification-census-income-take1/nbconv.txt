@@ -1,0 +1,1 @@
+jupyter nbconvert --to html py-classification-census-income-take1.ipynb
