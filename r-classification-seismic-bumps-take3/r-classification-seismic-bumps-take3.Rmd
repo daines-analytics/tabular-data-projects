@@ -1,0 +1,449 @@
+---
+title: "Binary Classification Model for Seismic Bumps Take 3 Using R"
+author: "David Lowe"
+date: "September 3, 2018"
+output: 
+  html_document: 
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Template Credit: Adapted from a template made available by Dr. Jason Brownlee of Machine Learning Mastery. [http://machinelearningmastery.com/]
+
+SUMMARY: The purpose of this project is to construct a prediction model using various machine learning algorithms and to document the end-to-end steps using a template. The Seismic Bumps Data Set is a binary-class classification situation where we are trying to predict one of the two possible outcomes.
+
+INTRODUCTION: Mining activity has always been connected with the occurrence of dangers which are commonly called mining hazards. A special case of such a threat is a seismic hazard which frequently occurs in many underground mines. Seismic hazard is the hardest detectable and predictable of natural hazards, and it is comparable to an earthquake. The complexity of seismic processes and big disproportion between the number of low-energy seismic events and the number of high-energy phenomena causes the statistical techniques to be insufficient to predict seismic hazard. Therefore, it is essential to search for new opportunities for better hazard prediction, also using machine learning methods.
+
+In iterations Take1 and Take2, we had three algorithms with high accuracy and ROC results but with strong biases due to the imbalance of our dataset. For this iteration, we will examine the feasibility of using the SMOTE technique to balance the dataset.
+
+CONCLUSION: From the previous Take1 iteration, the baseline performance of the eight algorithms achieved an average accuracy of 93.11%. Three algorithms (Random Forest, Support Vector Machine, and Adaboost) achieved the top three accuracy scores after the first round of modeling. After a series of tuning trials, all three algorithms turned in the identical accuracy result of 93.42%, with an identical Kappa score of 0.0. With an imbalanced dataset we have on-hand, we will need to look for another metric or another approach to evaluate the models.
+
+From the previous Take2 iteration, the baseline performance of the eight algorithms achieved an average ROC score of 71.99%. Three algorithms (Random Forest, Adaboost, and Stochastic Gradient Boosting) achieved the top three ROC scores after the first round of modeling. After a series of tuning trials, Stochastic Gradient Boosting turned in the best ROC result of 78.59%, but with a dismal sensitivity score of 0.88%. 
+
+From the current iteration, the baseline performance of the eight algorithms achieved an average ROC score of 87.33%. Three algorithms (Random Forest, Adaboost, and Stochastic Gradient Boosting) achieved the top three ROC scores after the first round of modeling. After a series of tuning trials, Random Forest turned in the best ROC result of 92.68%, but with a much-better sensitivity score of 70.87%. Using the optimized tuning parameter available, the Random Forest algorithm processed the validation dataset with a ROC of 84.57%, which was slightly below the ROC score of the training data.
+
+The ROC metric has given us a more viable way to evaluate the models, other than using the accuracy scores. Also, the SMOTE technique helped to make the model evaluation more realistic with the imbalanced dataset we have. For this project, the Random Forest appeared to be the most suitable algorithm for the dataset.
+
+Dataset Used: Seismic Bumps Data Set
+
+Dataset ML Model: Binary classification with numerical and categorical attributes
+
+Dataset Reference: https://archive.ics.uci.edu/ml/datasets/seismic-bumps
+
+The project aims to touch on the following areas:
+
+1. Document a predictive modeling problem end-to-end.
+2. Explore data cleaning and transformation options
+3. Explore non-ensemble and ensemble algorithms for baseline model performance
+4. Explore algorithm tuning techniques for improving model performance
+
+Any predictive modeling machine learning project genrally can be broken down into about six major tasks:
+
+1. Prepare Problem
+2. Summarize Data
+3. Prepare Data
+4. Model and Evaluate Algorithms
+5. Improve Accuracy or Results
+6. Finalize Model and Present Results
+
+## 1. Prepare Problem
+
+### 1.a) Load libraries
+
+```{r}
+library(caret)
+library(corrplot)
+library(ROCR)
+library(foreign)
+library(DMwR)
+```
+
+### 1.b) Load dataset
+
+```{r}
+startTimeScript <- proc.time()
+entireDataset <- read.arff("seismic-bumps.arff")
+
+# Use variable totCol to hold the number of columns in the dataframe
+totCol <- ncol(entireDataset)
+
+# Rename the class/target column to a standard label
+entireDataset$targetVar="hazardous"
+entireDataset$targetVar[entireDataset$class==0] <- "nonhazardous"
+entireDataset$targetVar <- factor(entireDataset$targetVar)
+entireDataset$class <- NULL
+```
+
+```{r}
+# Setting up various variables to control the upcoming data visualization charts
+# Set up a variable for the total number of attribute columns (totAttr)
+totAttr <- totCol-1
+
+#Which column does the first attribute column begin (1 - First, 2 - second)?
+beginAttrCol <- 2
+if (beginAttrCol == 1) {
+attrColOffset <- 0
+} else {
+attrColOffset <- 1
+}
+
+# Set up the number of row and columns for visualization display. dispRow * dispCol should be >= totAttr
+dispCol <- 4
+if (totAttr%%dispCol == 0) {
+dispRow <- totAttr%/%dispCol
+} else {
+dispRow <- (totAttr%/%dispCol) + 1
+}
+cat("Will attempt to create graphics grid (col x row): ", dispCol, ' by ', dispRow)
+```
+
+## 2. Summarize Data
+To gain a better understanding of the data that we have on-hand, we will leverage a number of descriptive statistics and data visualization techniques. The plan is to use the results to consider new questions, review assumptions, and validate hypotheses that we can investigate later with specialized models.
+
+### 2.a) Descriptive statistics
+
+#### 2.a.i) Peek at the data itself.
+
+```{r}
+head(entireDataset)
+```
+
+#### 2.a.ii) Dimensions of the dataset.
+
+```{r}
+dim(entireDataset)
+```
+
+#### 2.a.iii) Types of the attributes.
+
+```{r}
+sapply(entireDataset, class)
+```
+
+#### 2.a.iv) Statistical summary of all attributes.
+
+```{r}
+summary(entireDataset)
+```
+
+#### 2.a.v) Summarize the levels of the class attribute.
+
+```{r}
+entireDataset_x <- entireDataset[,1:(totCol-1)]
+entireDataset_y <- entireDataset[,totCol]
+cbind(freq=table(entireDataset_y), percentage=prop.table(table(entireDataset_y))*100)
+```
+
+#### 2.a.vi) Count missing values.
+
+```{r}
+sapply(entireDataset, function(x) sum(is.na(x)))
+```
+
+### 2.b) Data visualizations
+
+#### 2.b.i) Univariate plots to better understand each attribute.
+
+```{r}
+# Boxplots for each attribute
+#par(mfrow=c(dispRow,dispCol))
+#for(i in beginAttrCol:(totAttr+attrColOffset)) {
+#	boxplot(entireDataset[,i], main=names(entireDataset)[i])
+#}
+```
+
+```{r}
+# Histograms each attribute
+#par(mfrow=c(dispRow,dispCol))
+#for(i in beginAttrCol:(totAttr+attrColOffset)) {
+#	hist(entireDataset[,i], main=names(entireDataset)[i])
+#}
+```
+
+```{r}
+# Density plot for each attribute
+#par(mfrow=c(dispRow,dispCol))
+#for(i in beginAttrCol:(totAttr+attrColOffset)) {
+#	plot(density(entireDataset[,i]), main=names(entireDataset)[i])
+#}
+```
+
+#### 2.b.ii) Multivariate plots to better understand the relationships between attributes
+
+```{r}
+# Scatterplot matrix colored by class
+#pairs(targetVar~., data=entireDataset, col=entireDataset$targetVar)
+```
+
+```{r}
+# Box and whisker plots for each attribute by class
+#scales <- list(x=list(relation="free"), y=list(relation="free"))
+#featurePlot(x=entireDataset_x, y=entireDataset_y, plot="box", scales=scales)
+```
+
+```{r}
+# Density plots for each attribute by class value
+#featurePlot(x=entireDataset_x, y=entireDataset_y, plot="density", scales=scales)
+```
+
+```{r}
+# Correlation plot
+#correlations <- cor(entireDataset_x)
+#corrplot(correlations, method="circle")
+```
+
+## 3. Prepare Data
+Some dataset may require additional preparation activities that will best exposes the structure of the problem and the relationships between the input attributes and the output variable. Some data-prep tasks might include:
+
+* Cleaning data by removing duplicates, marking missing values and even imputing missing values.
+* Feature selection where redundant features may be removed.
+* Data transforms where attributes are scaled or redistributed in order to best expose the structure of the problem later to learning algorithms.
+
+### 3.a) Data Cleaning
+
+```{r}
+# Not applicable for this iteration of the project.
+seedNum <- 888
+set.seed(seedNum)
+
+# Mark missing values
+#invalid <- 0
+#entireDataset$some_col[entireDataset$some_col==invalid] <- NA
+
+# Impute missing values
+#entireDataset$some_col <- with(entireDataset, impute(some_col, mean))
+```
+
+### 3.b) Feature Selection
+
+```{r}
+# Not applicable for this iteration of the project.
+set.seed(seedNum)
+```
+
+### 3.c) Data Transforms
+
+```{r}
+# Perform SMOTE transformation to combat the imbalance of the data
+set.seed(seedNum)
+entireDataset <- SMOTE(targetVar ~., data=entireDataset, perc.over=200, perc.under=500)
+summary(entireDataset)
+```
+
+### 3.d) Split-out training and validation datasets
+We create a training dataset (variable name "training") and a validation dataset (variable name "validation").
+
+```{r}
+set.seed(seedNum)
+
+# Create a list of the rows in the original dataset we can use for training
+training_index <- createDataPartition(entireDataset$targetVar, p=0.70, list=FALSE)
+
+# Use 70% of data to training and testing the models
+training <- entireDataset[training_index,]
+
+# Select the remaining 30% of the data for validation
+validation <- entireDataset[-training_index,]
+```
+
+```{r}
+proc.time()-startTimeScript
+```
+
+## 4. Model and Evaluate Algorithms
+After the data-prep, we next work on finding a workable model by evaluating a subset of machine learning algorithms that are good at exploiting the structure of the training. The typical evaluation tasks include:
+
+* Defining test options such as cross validation and the evaluation metric to use.
+* Spot checking a suite of linear and nonlinear machine learning algorithms.
+* Comparing the estimated accuracy of algorithms.
+
+For this project, we will evaluate one linear, three non-linear, and four ensemble algorithms:
+
+Linear Algorithm: Logistic Regression
+
+Non-Linear Algorithms: Decision Trees (CART), k-Nearest Neighbors, and Support Vector Machine
+
+Ensemble Algorithms: Bagged CART, Random Forest, Adaboost, and Stochastic Gradient Boosting
+
+The random number seed is reset before each run to ensure that the evaluation of each algorithm is performed using the same data splits. It ensures the results are directly comparable.
+
+### 4.a) Set test options and evaluation metric
+
+```{r}
+# Run algorithms using 10-fold cross validation
+control <- trainControl(method="repeatedcv", number=10, repeats=3, classProbs=TRUE, summaryFunction = twoClassSummary)
+metricTarget <- "ROC"
+```
+
+### 4.b) Generate models using linear algorithms
+
+```{r LR}
+# Logistic Regression (Classification)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.glm <- train(targetVar~., data=training, method="glm", metric=metricTarget, trControl=control)
+proc.time()-startTimeModule
+```
+
+### 4.c) Generate models using nonlinear algorithms
+
+```{r CART}
+# Decision Tree - CART (Regression/Classification)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.cart <- train(targetVar~., data=training, method="rpart", metric=metricTarget, trControl=control)
+proc.time()-startTimeModule
+```
+
+```{r KNN}
+# k-Nearest Neighbors (Regression/Classification)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.knn <- train(targetVar~., data=training, method="knn", metric=metricTarget, trControl=control)
+proc.time()-startTimeModule
+```
+
+```{r SVM}
+# Support Vector Machine (Regression/Classification)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.svm <- train(targetVar~., data=training, method="svmRadial", metric=metricTarget, trControl=control)
+proc.time()-startTimeModule
+```
+
+### 4.d) Generate models using ensemble algorithms
+In this section, we will explore the use and tuning of ensemble algorithms to see whether we can improve the results.
+
+```{r BAGCART}
+# Bagged CART (Regression/Classification)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.bagcart <- train(targetVar~., data=training, method="treebag", metric=metricTarget, trControl=control)
+proc.time()-startTimeModule
+```
+
+```{r RF}
+# Random Forest (Regression/Classification)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.rf <- train(targetVar~., data=training, method="rf", metric=metricTarget, trControl=control)
+proc.time()-startTimeModule
+```
+
+```{r ADABOOST}
+# AdaBoost (Classification)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.ada <- train(targetVar~., data=training, method="ada", metric=metricTarget, trControl=control)
+proc.time()-startTimeModule
+```
+
+```{r GBM}
+# Stochastic Gradient Boosting (Regression/Classification)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.gbm <- train(targetVar~., data=training, method="gbm", metric=metricTarget, trControl=control, verbose=F)
+proc.time()-startTimeModule
+```
+
+### 4.e) Compare baseline algorithms
+
+```{r SPOT_CHECK}
+results <- resamples(list(LR=fit.glm, CART=fit.cart, kNN=fit.knn, SVM=fit.svm, BagCART=fit.bagcart, RF=fit.rf, AdaBoost=fit.ada, GBM=fit.gbm))
+summary(results)
+dotplot(results)
+```
+
+## 5. Improve Accuracy or Results
+After we achieve a short list of machine learning algorithms with good level of accuracy, we can leverage ways to improve the accuracy of the models.
+
+Using the three best-perfoming algorithms from the previous section, we will Search for a combination of parameters for each algorithm that yields the best results.
+
+### 5.a) Algorithm Tuning
+Finally, we will tune the best-performing algorithms from each group further and see whether we can get more accuracy out of them.
+
+```{r FINAL1}
+# Tuning algorithm #1 - Random Forest
+startTimeModule <- proc.time()
+set.seed(seedNum)
+grid <- expand.grid(mtry = c(2:6))
+fit.final1 <- train(targetVar~., data=training, method="rf", metric=metricTarget, tuneGrid=grid, trControl=control)
+plot(fit.final1)
+print(fit.final1)
+proc.time()-startTimeModule
+```
+
+```{r FINAL2}
+# Tuning algorithm #2 - Adaboost
+startTimeModule <- proc.time()
+set.seed(seedNum)
+grid <- expand.grid(iter=c(50, 100, 150), maxdepth=c(1, 2, 3), nu=c(0.05, 0.1, 0.15))
+fit.final2 <- train(targetVar~., data=training, method="ada", metric=metricTarget, tuneGrid=grid, trControl=control, verbose=F)
+plot(fit.final2)
+print(fit.final2)
+proc.time()-startTimeModule
+```
+
+```{r FINAL3}
+# Tuning algorithm #3 - Stochastic Gradient Boosting
+startTimeModule <- proc.time()
+set.seed(seedNum)
+grid <- expand.grid(.n.trees=c(50, 100, 200), .shrinkage=c(0.01, 0.05, 0.1), .interaction.depth=c(1, 2, 3), .n.minobsinnode=c(3, 5, 7))
+fit.final3 <- train(targetVar~., data=training, method="gbm", metric=metricTarget, tuneGrid=grid, trControl=control, verbose=F)
+plot(fit.final3)
+print(fit.final3)
+proc.time()-startTimeModule
+```
+
+### 5.d) Compare Algorithms After Tuning
+
+```{r POST_TUNING}
+results <- resamples(list(RF=fit.final1, ADA=fit.final2, GBM=fit.final3))
+summary(results)
+dotplot(results)
+```
+
+## 6. Finalize Model and Present Results
+Once we have narrow down to a model that we believe can make accurate predictions on unseen data, we are ready to finalize it. Finalizing a model may involve sub-tasks such as:
+
+* Using an optimal model tuned to make predictions on unseen data.
+* Creating a standalone model using the tuned parameters
+* Saving an optimal model to file for later use.
+
+### 6.a) Predictions on validation dataset
+
+```{r PREDICT}
+predictions <- predict(fit.final1, newdata=validation)
+confusionMatrix(predictions, validation$targetVar)
+
+pred <- prediction(as.numeric(predictions), as.numeric(validation$targetVar))
+perf <- performance(pred, measure = "tpr", x.measure = "fpr")
+plot(perf, colorize=TRUE)
+auc <- performance(pred, measure = "auc")
+auc <- auc@y.values[[1]]
+auc
+```
+
+### 6.b) Create standalone model on entire training dataset
+
+```{r FINALMODEL}
+library(randomForest)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+finalModel <- randomForest(targetVar ~., entireDataset, mtry=5, na.action=na.omit)
+print(finalModel)
+proc.time()-startTimeModule
+```
+
+### 6.c) Save model for later use
+
+```{r}
+#saveRDS(finalModel, "./finalModel_BinaryClass.rds")
+```
+
+```{r}
+proc.time()-startTimeScript
+```
