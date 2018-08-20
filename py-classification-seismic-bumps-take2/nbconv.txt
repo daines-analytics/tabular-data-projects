@@ -1,0 +1,1 @@
+jupyter nbconvert --to html py-classification-seismic-bumps-take2.ipynb
