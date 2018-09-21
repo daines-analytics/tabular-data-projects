@@ -1,7 +1,7 @@
 ---
-title: "Multi-Class Classification Model for [Project Name] Using R version 03.0"
+title: "Multi-Class Classification Model for [Project Name] Using R version 04.0"
 author: "David Lowe"
-date: "July 13, 2018"
+date: "September 17, 2018"
 output: 
   html_document: 
     toc: yes
@@ -17,7 +17,9 @@ SUMMARY: [The purpose of this project is to construct a prediction model using v
 
 INTRODUCTION: [Sample Paragraph - The dataset involves predicting, from USA Forensic Science Service, six types of glass; defined in terms of their oxide content (i.e. Na, Fe, K, etc). The study of classification of types of glass was also partly motivated by criminological investigation. At the scene of the crime, the glass left can be used as evidence...if it is correctly identified!]
 
-CONCLUSION: [Sample Paragraph - The baseline performance of the eight algorithms achieved an average accuracy of 69.64%. Three algorithms (Bagged CART, Random Forest, and Stochastic Gradient Boosting) achieved the top three accuracy scores after the first round of modeling. After a series of tuning trials, Random Forest turned in the top result using the training data. It achieved an average accuracy of 78.04%. Using the optimized tuning parameter available, the Random Forest algorithm processed the validation dataset with an accuracy of 78.69%, which was even better the accuracy of the training data. For this project, the Random Forest ensemble algorithm yielded consistently top-notch training and validation results, which warrant the additional processing required by the algorithm.]
+ANALYSIS: [Sample Paragraph - The baseline performance of the eight algorithms achieved an average accuracy of 71.52%. Three algorithms (Bagged CART, Random Forest, and Stochastic Gradient Boosting) achieved the top three accuracy scores after the first round of modeling. After a series of tuning trials, Random Forest turned in the top result using the training data. It achieved an average accuracy of 78.04%. Using the optimized tuning parameter available, the Random Forest algorithm processed the validation dataset with an accuracy of 78.69%, which was even better the accuracy of the training data.]
+
+CONCLUSION: [Sample Paragraph - For this iteration, the Random Forest algorithm achieved the top-tier training and validation results. For the project, Random Forest should be considered for further modeling or production use.]
 
 Dataset Used: [Dataset Name - Glass Identification Dataset]
 
@@ -48,6 +50,7 @@ Any predictive modeling machine learning project genrally can be broken down int
 ### 1.a) Load libraries
 
 ```{r}
+startTimeScript <- proc.time()
 library(caret)
 library(corrplot)
 library(mlbench)
@@ -56,16 +59,36 @@ library(mlbench)
 ### 1.b) Load dataset
 
 ```{r}
-startTimeScript <- proc.time()
 #entireDataset <- read.csv("some_dataset.csv", header= TRUE, stringsAsFactors = FALSE)
 data(Glass)
 entireDataset <- Glass
 
 # Rename the class column/target to a standard label
 colnames(entireDataset)[ncol(entireDataset)] <- "targetVar"
+```
+
+### 1.c) Set up the key parameters to be used in the script
+
+```{r}
+# Create one random seed number for reproducible results
+seedNum <- 888
+set.seed(seedNum)
 
 # Use variable totCol to hold the number of columns in the dataframe
 totCol <- ncol(entireDataset)
+```
+
+```{r}
+# Set up a variable for the total number of attribute columns (totAttr)
+totAttr <- totCol-1
+# Set up the number of row and columns for visualization display. dispRow * dispCol should be >= totAttr
+dispCol <- 4
+if (totAttr%%dispCol == 0) {
+dispRow <- totAttr%/%dispCol
+} else {
+dispRow <- (totAttr%/%dispCol) + 1
+}
+cat("Will attempt to create graphics grid (col x row): ", dispCol, ' by ', dispRow)
 ```
 
 ## 2. Summarize Data
@@ -114,20 +137,6 @@ sapply(entireDataset, function(x) sum(is.na(x)))
 ### 2.b) Data visualizations
 
 #### 2.b.i) Univariate plots to better understand each attribute.
-
-```{r}
-# Set up a variable for the total number of attribute columns (totAttr)
-totAttr <- totCol-1
-# Set up the number of row and columns for visualization display. dispRow * dispCol should be >= totAttr
-dispCol <- 5
-if (totAttr%%dispCol == 0) {
-dispRow <- totAttr%/%dispCol
-} else {
-dispRow <- (totAttr%/%dispCol) + 1
-}
-cat("Will attempt to create graphics grid (col x row): ", dispCol, ' by ', dispRow)
-```
-
 
 ```{r}
 # Boxplots for each attribute
@@ -213,17 +222,17 @@ Some dataset may require additional preparation activities that will best expose
 We create a training dataset (variable name "training") and a validation dataset (variable name "validation").
 
 ```{r}
-seedNum <- 888
 set.seed(seedNum)
 
 # Create a list of the rows in the original dataset we can use for training
 training_index <- createDataPartition(entireDataset$targetVar, p=0.70, list=FALSE)
-
 # Use 70% of data to training and testing the models
 training <- entireDataset[training_index,]
-
 # Select the remaining 30% of the data for validation
 validation <- entireDataset[-training_index,]
+
+dim(training)
+dim(validation)
 ```
 
 ```{r}
@@ -324,6 +333,8 @@ proc.time()-startTimeModule
 results <- resamples(list(LDA=fit.lda, CART=fit.cart, kNN=fit.knn, SVM=fit.svm, BagCART=fit.bagcart, RF=fit.rf, GBM=fit.gbm))
 summary(results)
 dotplot(results)
+cat('The average accuracy from all models is:',
+    mean(c(results$values$`LR~Accuracy`,results$values$`CART~Accuracy`,results$values$`kNN~Accuracy`,results$values$`SVM~Accuracy`,results$values$`BagCART~Accuracy`,results$values$`RF~Accuracy`,results$values$`GBM~Accuracy`)))
 ```
 
 ## 5. Improve Accuracy or Results
@@ -390,8 +401,8 @@ confusionMatrix(predictions, validation$targetVar)
 ### 6.b) Create standalone model on entire training dataset
 
 ```{r}
-library(randomForest)
 startTimeModule <- proc.time()
+library(randomForest)
 set.seed(seedNum)
 finalModel <- randomForest(targetVar~., entireDataset, mtry=4, na.action=na.omit)
 summary(finalModel)
