@@ -1,0 +1,5 @@
+https://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones
+
+http://archive.ics.uci.edu/ml/datasets/Smartphone-Based+Recognition+of+Human+Activities+and+Postural+Transitions
+
+https://www.kaggle.com/uciml/human-activity-recognition-with-smartphones
