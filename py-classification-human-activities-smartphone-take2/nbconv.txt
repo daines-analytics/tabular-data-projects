@@ -1,0 +1,1 @@
+jupyter nbconvert --to html py-classification-human-activities-smartphone-take2.ipynb
