@@ -1,7 +1,7 @@
 ---
-title: "Multi-Class Classification Model for [Project Name] Using R version 04.0"
+title: "Multi-Class Classification Model for [Project Name] Using R version 05.0"
 author: "David Lowe"
-date: "September 17, 2018"
+date: "October 31, 2018"
 output: 
   html_document: 
     toc: yes
@@ -19,7 +19,7 @@ INTRODUCTION: [Sample Paragraph - The dataset involves predicting, from USA Fore
 
 ANALYSIS: [Sample Paragraph - The baseline performance of the eight algorithms achieved an average accuracy of 71.52%. Three algorithms (Bagged CART, Random Forest, and Stochastic Gradient Boosting) achieved the top three accuracy scores after the first round of modeling. After a series of tuning trials, Random Forest turned in the top result using the training data. It achieved an average accuracy of 78.04%. Using the optimized tuning parameter available, the Random Forest algorithm processed the validation dataset with an accuracy of 78.69%, which was even better the accuracy of the training data.]
 
-CONCLUSION: [Sample Paragraph - For this iteration, the Random Forest algorithm achieved the top-tier training and validation results. For the project, Random Forest should be considered for further modeling or production use.]
+CONCLUSION: [Sample Paragraph - For this iteration, the Random Forest algorithm achieved the top-tier training and validation results. For this dataset, Random Forest should be considered for further modeling or production use.]
 
 Dataset Used: [Dataset Name - Glass Identification Dataset]
 
@@ -53,7 +53,12 @@ Any predictive modeling machine learning project genrally can be broken down int
 startTimeScript <- proc.time()
 library(caret)
 library(corrplot)
+library(parallel)
 library(mlbench)
+
+# Create one random seed number for reproducible results
+seedNum <- 888
+set.seed(seedNum)
 ```
 
 ### 1.b) Load dataset
@@ -61,34 +66,73 @@ library(mlbench)
 ```{r}
 #entireDataset <- read.csv("some_dataset.csv", header= TRUE, stringsAsFactors = FALSE)
 data(Glass)
-entireDataset <- Glass
+originalDataset <- Glass
 
-# Rename the class column/target to a standard label
-colnames(entireDataset)[ncol(entireDataset)] <- "targetVar"
+# Different ways of reading and processing the input dataset. Saving these for future references.
+#x_train <- read.fwf("X_train.txt", widths = widthVector, col.names = colNames)
+#y_train <- read.csv("y_train.txt", header = FALSE, col.names = c("targetVar"))
+#y_train$targetVar <- as.factor(y_train$targetVar)
+#xy_train <- cbind(x_train, y_train)
+```
+
+
+```{r}
+# Use variable totCol to hold the number of columns in the dataframe
+totCol <- ncol(originalDataset)
+
+# Set up variable totAttr for the total number of attribute columns
+totAttr <- totCol-1
+```
+
+```{r}
+# targetCol variable indicates the column location of the target/class variable
+# If the first column, set targetCol to 1. If the last column, set targetCol to totCol
+# if (targetCol <> 1) and (targetCol <> totCol), be aware when slicing up the dataframes for visualization! 
+targetCol <- totCol
+colnames(originalDataset)[targetCol] <- "targetVar"
+```
+
+```{r}
+# We create training datasets (xy_train, x_train, y_train) for various operations.
+# We create validation datasets (xy_test, x_test, y_test) for various operations.
+set.seed(seedNum)
+
+# Create a list of the rows in the original dataset we can use for training
+training_index <- createDataPartition(originalDataset$targetVar, p=0.70, list=FALSE)
+# Use 70% of the data to train the models and the remaining for testing/validation
+xy_train <- originalDataset[training_index,]
+xy_test <- originalDataset[-training_index,]
+
+if (targetCol==1) {
+x_train <- xy_train[,(targetCol+1):totCol]
+y_train <- xy_train[,targetCol]
+y_test <- xy_test[,targetCol]
+} else {
+x_train <- xy_train[,1:(totAttr)]
+y_train <- xy_train[,totCol]
+y_test <- xy_test[,totCol]
+}
 ```
 
 ### 1.c) Set up the key parameters to be used in the script
 
 ```{r}
-# Create one random seed number for reproducible results
-seedNum <- 888
-set.seed(seedNum)
-
-# Use variable totCol to hold the number of columns in the dataframe
-totCol <- ncol(entireDataset)
-```
-
-```{r}
-# Set up a variable for the total number of attribute columns (totAttr)
-totAttr <- totCol-1
 # Set up the number of row and columns for visualization display. dispRow * dispCol should be >= totAttr
-dispCol <- 4
+dispCol <- 3
 if (totAttr%%dispCol == 0) {
 dispRow <- totAttr%/%dispCol
 } else {
 dispRow <- (totAttr%/%dispCol) + 1
 }
 cat("Will attempt to create graphics grid (col x row): ", dispCol, ' by ', dispRow)
+```
+
+### 1.d) Set test options and evaluation metric
+
+```{r}
+# Run algorithms using 10-fold cross validation
+control <- trainControl(method="repeatedcv", number=10, repeats=3)
+metricTarget <- "Accuracy"
 ```
 
 ## 2. Summarize Data
@@ -99,39 +143,37 @@ To gain a better understanding of the data that we have on-hand, we will leverag
 #### 2.a.i) Peek at the data itself.
 
 ```{r}
-head(entireDataset)
+head(xy_train)
 ```
 
 #### 2.a.ii) Dimensions of the dataset.
 
 ```{r}
-dim(entireDataset)
+dim(xy_train)
 ```
 
 #### 2.a.iii) Types of the attributes.
 
 ```{r}
-sapply(entireDataset, class)
+sapply(xy_train, class)
 ```
 
 #### 2.a.iv) Statistical summary of all attributes.
 
 ```{r}
-summary(entireDataset)
+summary(xy_train)
 ```
 
 #### 2.a.v) Summarize the levels of the class attribute.
 
 ```{r}
-entireDataset_x <- entireDataset[,1:(totCol-1)]
-entireDataset_y <- entireDataset[,totCol]
-cbind(freq=table(entireDataset_y), percentage=prop.table(table(entireDataset_y))*100)
+cbind(freq=table(y_train), percentage=prop.table(table(y_train))*100)
 ```
 
 #### 2.a.vi) Count missing values.
 
 ```{r}
-sapply(entireDataset, function(x) sum(is.na(x)))
+sapply(xy_train, function(x) sum(is.na(x)))
 ```
 
 ### 2.b) Data visualizations
@@ -142,7 +184,7 @@ sapply(entireDataset, function(x) sum(is.na(x)))
 # Boxplots for each attribute
 par(mfrow=c(dispRow,dispCol))
 for(i in 1:totAttr) {
-	boxplot(entireDataset[,i], main=names(entireDataset)[i])
+	boxplot(x_train[,i], main=names(x_train)[i])
 }
 ```
 
@@ -150,7 +192,7 @@ for(i in 1:totAttr) {
 # Histograms each attribute
 par(mfrow=c(dispRow,dispCol))
 for(i in 1:totAttr) {
-	hist(entireDataset[,i], main=names(entireDataset)[i])
+	hist(x_train[,i], main=names(x_train)[i])
 }
 ```
 
@@ -158,7 +200,7 @@ for(i in 1:totAttr) {
 # Density plot for each attribute
 par(mfrow=c(dispRow,dispCol))
 for(i in 1:totAttr) {
-	plot(density(entireDataset[,i]), main=names(entireDataset)[i])
+	plot(density(x_train[,i]), main=names(x_train)[i])
 }
 ```
 
@@ -166,23 +208,23 @@ for(i in 1:totAttr) {
 
 ```{r}
 # Scatterplot matrix colored by class
-pairs(targetVar~., data=entireDataset, col=entireDataset$targetVar)
+pairs(targetVar~., data=xy_train, col=xy_train$targetVar)
 ```
 
 ```{r}
 # Box and whisker plots for each attribute by class
 scales <- list(x=list(relation="free"), y=list(relation="free"))
-featurePlot(x=entireDataset_x, y=entireDataset_y, plot="box", scales=scales)
+featurePlot(x=x_train, y=y_train, plot="box", scales=scales)
 ```
 
 ```{r}
 # Density plots for each attribute by class value
-featurePlot(x=entireDataset_x, y=entireDataset_y, plot="density", scales=scales)
+featurePlot(x=x_train, y=y_train, plot="density", scales=scales)
 ```
 
 ```{r}
 # Correlation plot
-correlations <- cor(entireDataset_x)
+correlations <- cor(x_train)
 corrplot(correlations, method="circle")
 ```
 
@@ -218,23 +260,6 @@ Some dataset may require additional preparation activities that will best expose
 # Not applicable for this iteration of the project.
 ```
 
-### 3.d) Split-out training and validation datasets
-We create a training dataset (variable name "training") and a validation dataset (variable name "validation").
-
-```{r}
-set.seed(seedNum)
-
-# Create a list of the rows in the original dataset we can use for training
-training_index <- createDataPartition(entireDataset$targetVar, p=0.70, list=FALSE)
-# Use 70% of data to training and testing the models
-training <- entireDataset[training_index,]
-# Select the remaining 30% of the data for validation
-validation <- entireDataset[-training_index,]
-
-dim(training)
-dim(validation)
-```
-
 ```{r}
 proc.time()-startTimeScript
 ```
@@ -256,31 +281,25 @@ Ensemble Algorithms: Bagged CART, Random Forest, and Stochastic Gradient Boostin
 
 The random number seed is reset before each run to ensure that the evaluation of each algorithm is performed using the same data splits. It ensures the results are directly comparable.
 
-### 4.a) Set test options and evaluation metric
-
-```{r}
-# Run algorithms using 10-fold cross validation
-control <- trainControl(method="repeatedcv", number=10, repeats=3)
-metricTarget <- "Accuracy"
-```
-
-### 4.b) Generate models using linear algorithms
+### 4.a) Generate models using linear algorithms
 
 ```{r LDA}
 # Linear Discriminant Analysis (Classification)
 startTimeModule <- proc.time()
 set.seed(seedNum)
-fit.lda <- train(targetVar~., data=training, method="lda", metric=metricTarget, trControl=control)
+fit.lda <- train(targetVar~., data=xy_train, method="lda", metric=metricTarget, trControl=control)
+print(fit.lda)
 proc.time()-startTimeModule
 ```
 
-### 4.c) Generate models using nonlinear algorithms
+### 4.b) Generate models using nonlinear algorithms
 
 ```{r CART}
 # Decision Tree - CART (Regression/Classification)
 startTimeModule <- proc.time()
 set.seed(seedNum)
-fit.cart <- train(targetVar~., data=training, method="rpart", metric=metricTarget, trControl=control)
+fit.cart <- train(targetVar~., data=xy_train, method="rpart", metric=metricTarget, trControl=control)
+print(fit.cart)
 proc.time()-startTimeModule
 ```
 
@@ -288,7 +307,8 @@ proc.time()-startTimeModule
 # k-Nearest Neighbors (Regression/Classification)
 startTimeModule <- proc.time()
 set.seed(seedNum)
-fit.knn <- train(targetVar~., data=training, method="knn", metric=metricTarget, trControl=control)
+fit.knn <- train(targetVar~., data=xy_train, method="knn", metric=metricTarget, trControl=control)
+print(fit.knn)
 proc.time()-startTimeModule
 ```
 
@@ -296,18 +316,20 @@ proc.time()-startTimeModule
 # Support Vector Machine (Regression/Classification)
 startTimeModule <- proc.time()
 set.seed(seedNum)
-fit.svm <- train(targetVar~., data=training, method="svmRadial", metric=metricTarget, trControl=control)
+fit.svm <- train(targetVar~., data=xy_train, method="svmRadial", metric=metricTarget, trControl=control)
+print(fit.svm)
 proc.time()-startTimeModule
 ```
 
-### 4.d) Generate models using ensemble algorithms
+### 4.c) Generate models using ensemble algorithms
 In this section, we will explore the use and tuning of ensemble algorithms to see whether we can improve the results.
 
 ```{r BAGCART}
 # Bagged CART (Regression/Classification)
 startTimeModule <- proc.time()
 set.seed(seedNum)
-fit.bagcart <- train(targetVar~., data=training, method="treebag", metric=metricTarget, trControl=control)
+fit.bagcart <- train(targetVar~., data=xy_train, method="treebag", metric=metricTarget, trControl=control)
+print(fit.bagcart)
 proc.time()-startTimeModule
 ```
 
@@ -315,7 +337,8 @@ proc.time()-startTimeModule
 # Random Forest (Regression/Classification)
 startTimeModule <- proc.time()
 set.seed(seedNum)
-fit.rf <- train(targetVar~., data=training, method="rf", metric=metricTarget, trControl=control)
+fit.rf <- train(targetVar~., data=xy_train, method="rf", metric=metricTarget, trControl=control)
+print(fit.rf)
 proc.time()-startTimeModule
 ```
 
@@ -323,18 +346,19 @@ proc.time()-startTimeModule
 # Stochastic Gradient Boosting (Regression/Classification)
 startTimeModule <- proc.time()
 set.seed(seedNum)
-fit.gbm <- train(targetVar~., data=training, method="gbm", metric=metricTarget, trControl=control, verbose=F)
+fit.gbm <- train(targetVar~., data=xy_train, method="gbm", metric=metricTarget, trControl=control, verbose=F)
+print(fit.gbm)
 proc.time()-startTimeModule
 ```
 
-### 4.e) Compare baseline algorithms
+### 4.d) Compare baseline algorithms
 
 ```{r SPOT_CHECK}
 results <- resamples(list(LDA=fit.lda, CART=fit.cart, kNN=fit.knn, SVM=fit.svm, BagCART=fit.bagcart, RF=fit.rf, GBM=fit.gbm))
 summary(results)
 dotplot(results)
 cat('The average accuracy from all models is:',
-    mean(c(results$values$`LR~Accuracy`,results$values$`CART~Accuracy`,results$values$`kNN~Accuracy`,results$values$`SVM~Accuracy`,results$values$`BagCART~Accuracy`,results$values$`RF~Accuracy`,results$values$`GBM~Accuracy`)))
+    mean(c(results$values$`LDA~Accuracy`,results$values$`CART~Accuracy`,results$values$`kNN~Accuracy`,results$values$`SVM~Accuracy`,results$values$`BagCART~Accuracy`,results$values$`RF~Accuracy`,results$values$`GBM~Accuracy`)))
 ```
 
 ## 5. Improve Accuracy or Results
@@ -359,7 +383,7 @@ proc.time()-startTimeModule
 startTimeModule <- proc.time()
 set.seed(seedNum)
 grid <- expand.grid(mtry = c(1:5))
-fit.final2 <- train(targetVar~., data=training, method="rf", metric=metricTarget, tuneGrid=grid, trControl=control)
+fit.final2 <- train(targetVar~., data=xy_train, method="rf", metric=metricTarget, tuneGrid=grid, trControl=control)
 plot(fit.final2)
 print(fit.final2)
 proc.time()-startTimeModule
@@ -369,8 +393,8 @@ proc.time()-startTimeModule
 # Tuning algorithm #3 - Stochastic Gradient Boosting
 startTimeModule <- proc.time()
 set.seed(seedNum)
-grid <- expand.grid(.n.trees=c(100, 200, 300), .shrinkage=c(0.01, 0.05, 0.1), .interaction.depth=c(1, 2, 3), .n.minobsinnode=c(3, 6, 10))
-fit.final3 <- train(targetVar~., data=training, method="gbm", metric=metricTarget, tuneGrid=grid, trControl=control, verbose=F)
+grid <- expand.grid(.n.trees=c(100, 200, 300), .shrinkage=0.1, .interaction.depth=c(1, 2, 3), .n.minobsinnode=10)
+fit.final3 <- train(targetVar~., data=xy_train, method="gbm", metric=metricTarget, tuneGrid=grid, trControl=control, verbose=F)
 plot(fit.final3)
 print(fit.final3)
 proc.time()-startTimeModule
@@ -394,8 +418,8 @@ Once we have narrow down to a model that we believe can make accurate prediction
 ### 6.a) Predictions on validation dataset
 
 ```{r PREDICT}
-predictions <- predict(fit.final2, newdata=validation)
-confusionMatrix(predictions, validation$targetVar)
+predictions <- predict(fit.final2, newdata=xy_test)
+confusionMatrix(predictions, y_test)
 ```
 
 ### 6.b) Create standalone model on entire training dataset
@@ -404,7 +428,7 @@ confusionMatrix(predictions, validation$targetVar)
 startTimeModule <- proc.time()
 library(randomForest)
 set.seed(seedNum)
-finalModel <- randomForest(targetVar~., entireDataset, mtry=4, na.action=na.omit)
+finalModel <- randomForest(targetVar~., xy_train, mtry=4, na.action=na.omit)
 summary(finalModel)
 proc.time()-startTimeModule
 ```
