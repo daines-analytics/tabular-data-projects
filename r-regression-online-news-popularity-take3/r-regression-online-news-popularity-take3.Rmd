@@ -1,0 +1,523 @@
+---
+title: "Regression Model for Online News Popularity Using R Take 3"
+author: "David Lowe"
+date: "December 7, 2018"
+output: 
+  html_document: 
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Template Credit: Adapted from a template made available by Dr. Jason Brownlee of Machine Learning Mastery. https://machinelearningmastery.com/
+
+SUMMARY: The purpose of this project is to construct a prediction model using various machine learning algorithms and to document the end-to-end steps using a template. The Online News Popularity dataset is a regression situation where we are trying to predict the value of a continuous variable.
+
+INTRODUCTION: This dataset summarizes a heterogeneous set of features about articles published by Mashable in a period of two years. The goal is to predict the article's popularity level in social networks. The dataset does not contain the original content, but some statistics associated with it. The original content can be publicly accessed and retrieved using the provided URLs.
+
+Many thanks to K. Fernandes, P. Vinagre and P. Cortez. A Proactive Intelligent Decision Support System for Predicting the Popularity of Online News. Proceedings of the 17th EPIA 2015 - Portuguese Conference on Artificial Intelligence, September, Coimbra, Portugal, for making the dataset and benchmarking information available.
+
+In iteration Take1, the script focused on evaluating various machine learning algorithms and identifying the algorithm that produces the best accuracy result. Iteration Take1 established a baseline performance regarding accuracy and processing time.
+
+In iteration Take2, we examined the feasibility of using a dimensionality reduction technique of ranking the attribute importance with a gradient boosting tree method. Afterward, we eliminated the features that do not contribute to the cumulative importance of 0.99 (or 99%).
+
+For this iteration, we will explore the Recursive Feature Elimination (or RFE) technique by recursively removing attributes and building a model on those attributes that remain. To keep the training time manageable, we will limit the number of attributes to 50.
+
+ANALYSIS: From the previous iteration Take1, the baseline performance of the machine learning algorithms achieved an average RMSE of 10446. Two algorithms (Random Forest and Stochastic Gradient Boosting) achieved the top RMSE scores after the first round of modeling. After a series of tuning trials, Random Forest turned in the top result using the training data. It achieved the best RMSE of 10299. Using the optimized tuning parameter available, the Random Forest algorithm processed the validation dataset with an RMSE of 12978, which was slightly worse than the accuracy of the training data and possibly due to over-fitting.
+
+From the previous iteration Take2, the baseline performance of the machine learning algorithms achieved an average RMSE of 10409. Two algorithms (ElasticNet and Stochastic Gradient Boosting) achieved the top RMSE scores after the first round of modeling. After a series of tuning trials, Stochastic Gradient Boosting turned in the top result using the training data. It achieved the best RMSE of 10312. Using the optimized tuning parameter available, the Stochastic Gradient Boosting algorithm processed the validation dataset with an RMSE of 13007, which was worse than the accuracy of the training data and possibly due to over-fitting.
+
+In the current iteration, the baseline performance of the machine learning algorithms achieved an average RMSE of 10503. Two algorithms (Ridge, LASSO, and ElasticNet) achieved the top RMSE scores after the first round of modeling. After a series of tuning trials, ElasticNet turned in the top result using the training data. It achieved the best RMSE of 10320. Using the optimized tuning parameter available, the ElasticNet algorithm processed the validation dataset with an RMSE of 13049, which was worse than the accuracy of the training data and possibly due to over-fitting.
+
+From the model-building activities, the number of attributes went from 58 down to 48 after eliminating 10 attributes. The processing time went from 21 hours 7 minutes in iteration Take1 down to 14 hours 49 minutes in iteration Take3, which was a reduction of 29% from Take1. The processing time, however, was a noticeable increase from Take2, which processed the dataset in 11 hours 41 minutes.
+
+CONCLUSION: The two feature selection techniques yielded different attribute selection sets and outcomes. For this dataset, the Stochastic Gradient Boosting algorithm and the attribute importance ranking technique from iteration Take2 should be considered for further modeling or production use.
+
+Dataset Used: Online News Popularity Dataset
+
+Dataset ML Model: Regression with numerical attributes
+
+Dataset Reference: https://archive.ics.uci.edu/ml/datasets/Online+News+Popularity
+
+The project aims to touch on the following areas:
+
+1. Document a predictive modeling problem end-to-end.
+2. Explore data cleaning and transformation options
+3. Explore non-ensemble and ensemble algorithms for baseline model performance
+4. Explore algorithm tuning techniques for improving model performance
+
+Any predictive modeling machine learning project genrally can be broken down into about six major tasks:
+
+1. Prepare Problem
+2. Summarize Data
+3. Prepare Data
+4. Model and Evaluate Algorithms
+5. Improve Accuracy or Results
+6. Finalize Model and Present Results
+
+## 1. Prepare Problem
+
+### 1.a) Load libraries
+
+```{r}
+startTimeScript <- proc.time()
+library(caret)
+library(corrplot)
+library(parallel)
+library(mailR)
+
+# Create one random seed number for reproducible results
+seedNum <- 888
+set.seed(seedNum)
+```
+
+### 1.b) Load dataset
+
+```{r}
+originalDataset <- read.csv("OnlineNewsPopularity.csv", header= TRUE)
+
+# Dropping the two non-predictive attributes: url and timedelta
+originalDataset$url <- NULL
+originalDataset$timedelta <- NULL
+
+# Different ways of reading and processing the input dataset. Saving these for future references.
+#x_train <- read.fwf("X_train.txt", widths = widthVector, col.names = colNames)
+#y_train <- read.csv("y_train.txt", header = FALSE, col.names = c("targetVar"))
+#y_train$targetVar <- as.factor(y_train$targetVar)
+#xy_train <- cbind(x_train, y_train)
+```
+
+```{r}
+# Use variable totCol to hold the number of columns in the dataframe
+totCol <- ncol(originalDataset)
+
+# Set up variable totAttr for the total number of attribute columns
+totAttr <- totCol-1
+```
+
+```{r}
+# targetCol variable indicates the column location of the target/class variable
+# If the first column, set targetCol to 1. If the last column, set targetCol to totCol
+# if (targetCol <> 1) and (targetCol <> totCol), be aware when slicing up the dataframes for visualization! 
+targetCol <- totCol
+colnames(originalDataset)[targetCol] <- "targetVar"
+```
+
+```{r}
+# We create training datasets (xy_train, x_train, y_train) for various operations.
+# We create validation datasets (xy_test, x_test, y_test) for various operations.
+set.seed(seedNum)
+
+# Create a list of the rows in the original dataset we can use for training
+training_index <- createDataPartition(originalDataset$targetVar, p=0.70, list=FALSE)
+# Use 70% of the data to train the models and the remaining for testing/validation
+xy_train <- originalDataset[training_index,]
+xy_test <- originalDataset[-training_index,]
+
+if (targetCol==1) {
+x_train <- xy_train[,(targetCol+1):totCol]
+y_train <- xy_train[,targetCol]
+y_test <- xy_test[,targetCol]
+} else {
+x_train <- xy_train[,1:(totAttr)]
+y_train <- xy_train[,totCol]
+y_test <- xy_test[,totCol]
+}
+```
+
+### 1.c) Set up the key parameters to be used in the script
+
+```{r}
+# Set up the number of row and columns for visualization display. dispRow * dispCol should be >= totAttr
+dispCol <- 4
+if (totAttr%%dispCol == 0) {
+dispRow <- totAttr%/%dispCol
+} else {
+dispRow <- (totAttr%/%dispCol) + 1
+}
+cat("Will attempt to create graphics grid (col x row): ", dispCol, ' by ', dispRow)
+```
+
+### 1.d) Set test options and evaluation metric
+
+```{r}
+# Run algorithms using 10-fold cross validation
+control <- trainControl(method="repeatedcv", number=10, repeats=1)
+metricTarget <- "RMSE"
+```
+
+### 1.e) Set up the email notification function
+
+```{r}
+email_notify <- function(msg=""){
+  sender <- "luozhi2488@gmail.com"
+  receiver <- "dave@contactdavidlowe.com"
+  sbj_line <- "Notification from R Script"
+  password <- readLines("email_credential.txt")
+  send.mail(
+    from = sender,
+    to = receiver,
+    subject= sbj_line,
+    body = msg,
+    smtp = list(host.name = "smtp.gmail.com", port = 465, user.name = sender, passwd = password, ssl = TRUE),
+    authenticate = TRUE,
+    send = TRUE)
+}
+```
+
+```{r}
+email_notify(paste("Library and Data Loading Completed!",date()))
+```
+
+## 2. Summarize Data
+To gain a better understanding of the data that we have on-hand, we will leverage a number of descriptive statistics and data visualization techniques. The plan is to use the results to consider new questions, review assumptions, and validate hypotheses that we can investigate later with specialized models.
+
+### 2.a) Descriptive statistics
+
+#### 2.a.i) Peek at the data itself.
+
+```{r}
+head(xy_train)
+```
+
+#### 2.a.ii) Dimensions of the dataset.
+
+```{r}
+dim(xy_train)
+dim(xy_test)
+```
+
+#### 2.a.iii) Types of the attributes.
+
+```{r}
+sapply(xy_train, class)
+```
+
+#### 2.a.iv) Statistical summary of all attributes.
+
+```{r}
+summary(xy_train)
+```
+
+#### 2.a.v) Count missing values.
+
+```{r}
+sapply(xy_train, function(x) sum(is.na(x)))
+```
+
+### 2.b) Data visualizations
+
+```{r}
+# Boxplots for each attribute
+# par(mfrow=c(dispRow,dispCol))
+for(i in 1:totAttr) {
+	boxplot(x_train[,i], main=names(x_train)[i])
+}
+```
+
+```{r}
+# Histograms each attribute
+# par(mfrow=c(dispRow,dispCol))
+for(i in 1:totAttr) {
+	hist(x_train[,i], main=names(x_train)[i])
+}
+```
+
+```{r}
+# Density plot for each attribute
+# par(mfrow=c(dispRow,dispCol))
+for(i in 1:totAttr) {
+	plot(density(x_train[,i]), main=names(x_train)[i])
+}
+```
+
+```{r}
+# Correlation plot
+correlations <- cor(x_train)
+corrplot(correlations, method="circle")
+```
+
+```{r}
+email_notify(paste("Data Summary and Visualization Completed!",date()))
+```
+
+## 3. Prepare Data
+Some dataset may require additional preparation activities that will best exposes the structure of the problem and the relationships between the input attributes and the output variable. Some data-prep tasks might include:
+
+* Cleaning data by removing duplicates, marking missing values and even imputing missing values.
+* Feature selection where redundant features may be removed.
+* Data transforms where attributes are scaled or redistributed in order to best expose the structure of the problem later to learning algorithms.
+
+### 3.a) Data Cleaning
+
+```{r}
+# Not applicable for this iteration of the project.
+
+# Mark missing values
+#invalid <- 0
+#entireDataset$some_col[entireDataset$some_col==invalid] <- NA
+
+# Impute missing values
+#entireDataset$some_col <- with(entireDataset, impute(some_col, mean))
+```
+
+### 3.b) Feature Selection
+
+```{r}
+# Using the Linear Regression (lm) algorithm, we perform the Recursive Feature Elimination (RFE) technique
+startTimeModule <- proc.time()
+set.seed(seedNum)
+rfeCTRL <- rfeControl(functions=lmFuncs, method="repeatedcv", repeats=2)
+rfeResults <- rfe(xy_train[,1:totAttr], xy_train[,totCol], sizes=c(30:50), rfeControl=rfeCTRL)
+print(rfeResults)
+rfeAttributes <- predictors(rfeResults)
+cat('Number of attributes identified from the RFE algorithm:',length(rfeAttributes))
+print(rfeAttributes)
+plot(rfeResults, type=c("g", "o"))
+```
+
+```{r}
+# Removing the unselected attributes from the training and validation dataframes
+rfeAttributes <- c(rfeAttributes,"targetVar")
+xy_train <- xy_train[, (names(xy_train) %in% rfeAttributes)]
+xy_test <- xy_test[, (names(xy_test) %in% rfeAttributes)]
+```
+
+### 3.c) Data Transforms
+
+```{r}
+# Not applicable for this iteration of the project.
+```
+
+```{r}
+proc.time()-startTimeScript
+email_notify(paste("Data Cleaning and Transformation Completed!",date()))
+```
+
+## 4. Model and Evaluate Algorithms
+After the data-prep, we next work on finding a workable model by evaluating a subset of machine learning algorithms that are good at exploiting the structure of the dataset. The typical evaluation tasks include:
+
+* Defining test options such as cross validation and the evaluation metric to use.
+* Spot checking a suite of linear and nonlinear machine learning algorithms.
+* Comparing the estimated accuracy of algorithms.
+
+For this project, we will evaluate four linear, three non-linear, and three ensemble algorithms:
+
+Linear Algorithms: Linear Regression, Ridge, LASSO, and ElasticNet
+
+Non-Linear Algorithms: Decision Trees (CART), k-Nearest Neighbors, and Support Vector Machine
+
+Ensemble Algorithms: Bagged CART, Random Forest, and Stochastic Gradient Boosting
+
+The random number seed is reset before each run to ensure that the evaluation of each algorithm is performed using the same data splits. It ensures the results are directly comparable.
+
+### 4.a) Generate models using linear algorithms
+
+```{r LR}
+# Linear Regression (Regression)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.lm <- train(targetVar~., data=xy_train, method="lm", metric=metricTarget, trControl=control)
+print(fit.lm)
+proc.time()-startTimeModule
+email_notify(paste("Linear Regression Modeling Completed!",date()))
+```
+
+```{r RIDGE}
+# Ridge (Regression)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.ridge <- train(targetVar~., data=xy_train, method="ridge", metric=metricTarget, trControl=control)
+print(fit.ridge)
+proc.time()-startTimeModule
+email_notify(paste("Ridge Modeling Completed!",date()))
+```
+
+```{r LASSO}
+# lasso (Regression)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.lasso <- train(targetVar~., data=xy_train, method="lasso", metric=metricTarget, trControl=control)
+print(fit.lasso)
+proc.time()-startTimeModule
+email_notify(paste("Lasso Modeling Completed!",date()))
+```
+
+```{r EN}
+# ElasticNet (Regression)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.en <- train(targetVar~., data=xy_train, method="enet", metric=metricTarget, trControl=control)
+print(fit.en)
+proc.time()-startTimeModule
+email_notify(paste("ElasticNet Modeling Completed!",date()))
+```
+
+### 4.b) Generate models using nonlinear algorithms
+
+```{r CART}
+# Decision Tree - CART (Regression/Classification)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.cart <- train(targetVar~., data=xy_train, method="rpart", metric=metricTarget, trControl=control)
+print(fit.cart)
+proc.time()-startTimeModule
+email_notify(paste("Decision Tree Modeling Completed!",date()))
+```
+
+```{r KNN}
+# k-Nearest Neighbors (Regression/Classification)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.knn <- train(targetVar~., data=xy_train, method="knn", metric=metricTarget, trControl=control)
+print(fit.knn)
+proc.time()-startTimeModule
+email_notify(paste("k-Nearest Neighbors Modeling Completed!",date()))
+```
+
+```{r SVM}
+# Support Vector Machine (Regression/Classification)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.svm <- train(targetVar~., data=xy_train, method="svmRadial", metric=metricTarget, trControl=control)
+print(fit.svm)
+proc.time()-startTimeModule
+email_notify(paste("Support Vector Machine Modeling Completed!",date()))
+```
+
+### 4.c) Generate models using ensemble algorithms
+In this section, we will explore the use and tuning of ensemble algorithms to see whether we can improve the results.
+
+```{r BAGCART}
+# Bagged CART (Regression/Classification)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.bagcart <- train(targetVar~., data=xy_train, method="treebag", metric=metricTarget, trControl=control)
+print(fit.bagcart)
+proc.time()-startTimeModule
+email_notify(paste("Bagged CART Modeling Completed!",date()))
+```
+
+```{r RF}
+# Random Forest (Regression/Classification)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.rf <- train(targetVar~., data=xy_train, method="rf", metric=metricTarget, trControl=control)
+print(fit.rf)
+proc.time()-startTimeModule
+email_notify(paste("Random Forest Modeling Completed!",date()))
+```
+
+```{r GBM}
+# Stochastic Gradient Boosting (Regression/Classification)
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.gbm <- train(targetVar~., data=xy_train, method="gbm", metric=metricTarget, trControl=control, verbose=F)
+print(fit.gbm)
+proc.time()-startTimeModule
+email_notify(paste("Stochastic Gradient Boosting Modeling Completed!",date()))
+```
+
+### 4.d) Compare baseline algorithms
+
+```{r SPOT_CHECK}
+results <- resamples(list(LR=fit.lm, RIDGE=fit.ridge, LASSO=fit.lasso, EN=fit.en, CART=fit.cart, kNN=fit.knn, SVM=fit.svm, BagCART=fit.bagcart, RF=fit.rf, GBM=fit.gbm))
+summary(results)
+dotplot(results)
+cat('The average RMSE from all models is:',
+    mean(c(results$values$`LR~RMSE`, results$values$`RIDGE~RMSE`, results$values$`LASSO~RMSE`, results$values$`EN~RMSE`, results$values$`CART~RMSE`, results$values$`kNN~RMSE`, results$values$`SVM~RMSE`, results$values$`BagCART~RMSE`, results$values$`RF~RMSE`, results$values$`GBM~RMSE`)))
+email_notify(paste("Baseline Modeling Completed!",date()))
+```
+
+## 5. Improve Accuracy or Results
+After we achieve a short list of machine learning algorithms with good level of accuracy, we can leverage ways to improve the accuracy of the models.
+
+Using the two best-perfoming algorithms from the previous section, we will Search for a combination of parameters for each algorithm that yields the best results.
+
+### 5.a) Algorithm Tuning
+Finally, we will tune the best-performing algorithms from each group further and see whether we can get more accuracy out of them.
+
+```{r FINAL1}
+# Tuning algorithm #1 - ElasticNet
+startTimeModule <- proc.time()
+set.seed(seedNum)
+grid <- expand.grid(lambda=c(0.001,0.01,0.1,1))
+fit.final1 <- train(targetVar~., data=xy_train, method="ridge", metric=metricTarget, tuneGrid=grid, trControl=control)
+plot(fit.final1)
+print(fit.final1)
+proc.time()-startTimeModule
+email_notify(paste("Algorithm #1 Tuning Completed!",date()))
+```
+
+```{r FINAL2}
+# Tuning algorithm #2 - LASSO
+startTimeModule <- proc.time()
+set.seed(seedNum)
+grid <- expand.grid(fraction=c(0.1,0.4,0.7,1.0))
+fit.final2 <- train(targetVar~., data=xy_train, method="lasso", metric=metricTarget, tuneGrid=grid, trControl=control)
+plot(fit.final2)
+print(fit.final2)
+proc.time()-startTimeModule
+email_notify(paste("Algorithm #2 Tuning Completed!",date()))
+```
+
+```{r FINAL3}
+# Tuning algorithm #3 - ElasticNet
+startTimeModule <- proc.time()
+set.seed(seedNum)
+grid <- expand.grid(lambda=c(0.001,0.01,0.1,1), fraction=c(0.1,0.4,0.7,1.0))
+fit.final3 <- train(targetVar~., data=xy_train, method="enet", metric=metricTarget, tuneGrid=grid, trControl=control)
+plot(fit.final3)
+print(fit.final3)
+proc.time()-startTimeModule
+email_notify(paste("Algorithm #3 Tuning Completed!",date()))
+```
+
+### 5.d) Compare Algorithms After Tuning
+
+```{r POST_TUNING}
+results <- resamples(list(RIDGE=fit.final1, LASSO=fit.final2, ENET=fit.final3))
+summary(results)
+dotplot(results)
+```
+
+## 6. Finalize Model and Present Results
+Once we have narrow down to a model that we believe can make accurate predictions on unseen data, we are ready to finalize it. Finalizing a model may involve sub-tasks such as:
+
+* Using an optimal model tuned to make predictions on unseen data.
+* Creating a standalone model using the tuned parameters
+* Saving an optimal model to file for later use.
+
+### 6.a) Predictions on validation dataset
+
+```{r PREDICT}
+predictions <- predict(fit.final3, newdata=xy_test)
+print(RMSE(predictions, y_test))
+print(R2(predictions, y_test))
+```
+
+### 6.b) Create standalone model on entire training dataset
+
+```{r FINALMODEL}
+startTimeModule <- proc.time()
+library(elasticnet)
+set.seed(seedNum)
+totCol <- ncol(xy_train)
+totAttr <- totCol-1
+#finalModel <- enet(xy_train[,1:totAttr], xy_train[,totCol], lambda=0.001)
+#summary(finalModel)
+proc.time()-startTimeModule
+```
+
+### 6.c) Save model for later use
+
+```{r}
+#saveRDS(finalModel, "./finalModel_Regression.rds")
+```
+
+```{r}
+proc.time()-startTimeScript
+email_notify(paste("Model Validation and Final Model Creation Completed!",date()))
+```
