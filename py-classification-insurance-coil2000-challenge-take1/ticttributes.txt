@@ -1,6 +1,6 @@
 MOSTYPE Customer Subtype see L0
-MAANTHUI Number of houses 1 – 10
-MGEMOMV Avg size household 1 – 6
+MAANTHUI Number of houses 1 10
+MGEMOMV Avg size household 1 6
 MGEMLEEF Avg age see L1
 MOSHOOFD Customer main type see L2
 MGODRK Roman catholic see L3
