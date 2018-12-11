@@ -1,0 +1,143 @@
+<!------------------------------------------------------------------------
+<!  The Insurance Company Benchmark (COIL 2000)
+<!----------------------------------------------------------------------->
+<HTML>
+<HEAD>
+<TITLE> The Insurance Company Benchmark (COIL 2000)</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF">
+
+<!------------------------------------------------------------------------
+<!  Title 
+<!----------------------------------------------------------------------->
+<H1> The Insurance Company Benchmark (COIL 2000)</H1>
+
+<!------------------------------------------------------------------------
+<!  Data Type
+<!----------------------------------------------------------------------->
+<H2>Data Type</H2>
+multivariate
+
+
+<!------------------------------------------------------------------------
+<!  Abstract
+<!----------------------------------------------------------------------->
+<H2>Abstract</H2>
+
+This data set used in the CoIL 2000 Challenge contains information on customers of an insurance company. The data consists of 86 variables and includes product usage data and socio-demographic data derived from zip area codes. The data was collected to answer the following question: Can you predict who would be interested in buying a caravan insurance policy and give an explanation why? 
+
+<!------------------------------------------------------------------------
+<!  Sources
+<!----------------------------------------------------------------------->
+<H2> Sources</H2>
+<H4> Original Owner and Donor</H4>
+<PRE>
+Peter van der Putten
+Sentient Machine Research
+Baarsjesweg 224
+1058 AA Amsterdam
+The Netherlands
++31 20 6186927
+<a href="mailto:pvdputten@hotmail.com">pvdputten@hotmail.com</a>, <a href="mailto:putten@liacs.nl">putten@liacs.nl</a>
+
+<a href="http://www.liacs.nl/~putten/library/cc2000/">TIC Benchmark Homepage</a>
+</PRE>
+
+<B>Date Donated: </B> March 7, 2000 
+
+
+
+<!------------------------------------------------------------------------
+<!  Data Characteristics 
+<!----------------------------------------------------------------------->
+<H2> Data Characteristics</H2>
+
+<p>
+Information about customers consists of 86 variables and includes product usage data and socio-demographic data derived from zip area codes. The data was supplied by the Dutch data mining company Sentient Machine Research and is based on a real world business problem. The training set contains over 5000 descriptions of customers, including the information of whether or not they have a caravan insurance policy. A test set contains 4000 customers of whom only the organisers know if they have a caravan insurance policy.
+
+<p>
+The <a href="dictionary.txt">data dictionary</a> describes the variables used and their values.
+
+<p>
+Note: All the variables starting with M are zipcode variables. They give information on the distribution of that variable, e.g. Rented house, in the zipcode area of the customer.
+
+
+<!------------------------------------------------------------------------
+<!  Other Relevant Information 
+<!----------------------------------------------------------------------->
+
+
+<!------------------------------------------------------------------------
+<!  Data Format 
+<!----------------------------------------------------------------------->
+<H2>Data Format</H2>
+
+<p> One instance per line with tab delimited fields. 
+
+<p>
+TICDATA2000.txt: 
+Dataset to train and validate prediction models and build a description (5822 customer records). Each record consists of 86 attributes, containing sociodemographic data (attribute 1-43) and product ownership (attributes 44-86).The sociodemographic data is derived from zip codes. All customers living in areas with the same zip code have the same sociodemographic attributes. Attribute 86, "CARAVAN:Number of mobile home policies", is the target variable. 
+
+<p>
+TICEVAL2000.txt: 
+Dataset for predictions (4000 customer records). It has the same format as TICDATA2000.txt, only the target is missing. Participants are supposed to return the list of predicted targets only. All datasets are in tab delimited format. 
+The meaning of the attributes and attribute values is given below.
+
+<p>
+TICTGTS2000.txt
+Targets for the evaluation set.
+
+
+
+<!------------------------------------------------------------------------
+<!  Past Usage 
+<!----------------------------------------------------------------------->
+<H2>Past Usage</H2>
+
+<p>
+P. van der Putten and M. van Someren (eds). <a href="http://www.liacs.nl/~putten/library/cc2000/report2.html">CoIL Challenge 2000: The Insurance Company Case</a>.  Published by Sentient Machine Research, Amsterdam. Also a Leiden Institute of Advanced Computer Science Technical Report 2000-09. June 22, 2000. 
+
+<p>
+In this report you will find 29 short papers and extended abstracts on this problem.
+   
+
+<!------------------------------------------------------------------------
+<!  Acknowledgements 
+<!----------------------------------------------------------------------->
+<H2>Acknowledgements</H2>
+
+Data is (c) Sentient Machine Research 2000
+
+<p>
+This dataset is owned and supplied by the Dutch datamining company Sentient Machine Research, and is based on real world business data. You are allowed to use this dataset and accompanying information for non commercial research and education purposes only. It is explicitly not allowed to use this dataset for commercial education or demonstration purposes. 
+
+<p> Please cite/acknowledge:
+
+<p>
+P. van der Putten and M. van Someren (eds) . CoIL Challenge 2000: The Insurance Company Case.  Published by Sentient Machine Research, Amsterdam. Also a Leiden Institute of Advanced Computer Science Technical Report 2000-09. June 22, 2000.  
+
+<!------------------------------------------------------------------------
+<!  References 
+<!----------------------------------------------------------------------->
+<H2>References and Further Information</H2>
+
+<p>
+There is a special website for this benchmark at <a href="http://www.liacs.nl/~putten/library/cc2000/">http://www.liacs.nl/~putten/library/cc2000/</a>.  On the website you can find an online report featuring 29 papers written by participants in the CoIL Challenge 2000 and further background information. In future more papers will be added to the website. If you have any submissions, please send them to <a href="mailto:putten@liacs.nl">putten@liacs.nl</a>.
+
+
+
+<!------------------------------------------------------------------------
+<!  Signature 
+<!----------------------------------------------------------------------->
+<p> <hr>
+<ADDRESS>
+<A href="http://kdd.ics.uci.edu/">The UCI KDD Archive</A> <br>
+<a href="http://www.ics.uci.edu/">Information and Computer Science</a> <br>
+<a href="http://www.uci.edu/">University of California, Irvine</a> <br>
+Irvine, CA 92697-3425 <br>
+</ADDRESS> 
+Last modified: October 12, 2000. 
+</BODY>
+</HTML>
+
+
