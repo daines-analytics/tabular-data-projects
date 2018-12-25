@@ -1,7 +1,7 @@
 ---
-title: "Multi-Class Classification Model for [Project Name] Using R version 06"
+title: "Multi-Class Classification Model for [Project Name] Using R version 07"
 author: "David Lowe"
-date: "December 10, 2018"
+date: "January 4, 2019"
 output: 
   html_document: 
     toc: yes
@@ -17,7 +17,7 @@ SUMMARY: [The purpose of this project is to construct a prediction model using v
 
 INTRODUCTION: [Sample Paragraph - The dataset involves predicting, from USA Forensic Science Service, six types of glass; defined in terms of their oxide content (i.e. Na, Fe, K, etc). The study of classification of types of glass was also partly motivated by criminological investigation. At the scene of the crime, the glass left can be used as evidence...if it is correctly identified!]
 
-ANALYSIS: [Sample Paragraph - The baseline performance of the eight algorithms achieved an average accuracy of 71.52%. Three algorithms (Bagged CART, Random Forest, and Stochastic Gradient Boosting) achieved the top three accuracy scores after the first round of modeling. After a series of tuning trials, Random Forest turned in the top result using the training data. It achieved an average accuracy of 78.04%. Using the optimized tuning parameter available, the Random Forest algorithm processed the validation dataset with an accuracy of 78.69%, which was even better the accuracy of the training data.]
+ANALYSIS: [Sample Paragraph - The baseline performance of the machine learning algorithms achieved an average accuracy of 70.00%. Two algorithms (Random Forest and Stochastic Gradient Boosting) achieved the top accuracy metrics after the first round of modeling. After a series of tuning trials, Random Forest turned in the top overall result and achieved an accuracy metric of 78.04%. By using the optimized parameters, the Random Forest algorithm processed the testing dataset with an accuracy of 78.69%, which was even better than the best prediction with the training data.]
 
 CONCLUSION: [Sample Paragraph - For this iteration, the Random Forest algorithm achieved the top-tier training and validation results. For this dataset, Random Forest should be considered for further modeling or production use.]
 
@@ -54,7 +54,9 @@ startTimeScript <- proc.time()
 library(caret)
 library(corrplot)
 library(mailR)
-library(parallel)
+library(stringr)
+library(MLmetrics)
+library(DMwR)
 library(mlbench)
 
 # Create one random seed number for reproducible results
@@ -69,7 +71,7 @@ email_notify <- function(msg=""){
   sender <- "luozhi2488@gmail.com"
   receiver <- "dave@contactdavidlowe.com"
   sbj_line <- "Notification from R Script"
-  password <- readLines("email_credential.txt")
+  password <- readLines("../email_credential.txt")
   send.mail(
     from = sender,
     to = receiver,
@@ -90,7 +92,7 @@ email_notify(paste("Library and Data Loading has begun!",date()))
 ```{r}
 #originalDataset <- read.csv("some_dataset.csv", header= TRUE, stringsAsFactors = FALSE)
 data(Glass)
-originalDataset <- Glass
+xy_original <- Glass
 
 # Different ways of reading and processing the input dataset. Saving these for future references.
 #x_train <- read.fwf("X_train.txt", widths = widthVector, col.names = colNames)
@@ -102,7 +104,7 @@ originalDataset <- Glass
 
 ```{r}
 # Use variable totCol to hold the number of columns in the dataframe
-totCol <- ncol(originalDataset)
+totCol <- ncol(xy_original)
 
 # Set up variable totAttr for the total number of attribute columns
 totAttr <- totCol-1
@@ -113,19 +115,21 @@ totAttr <- totCol-1
 # If the first column, set targetCol to 1. If the last column, set targetCol to totCol
 # if (targetCol <> 1) and (targetCol <> totCol), be aware when slicing up the dataframes for visualization! 
 targetCol <- totCol
-colnames(originalDataset)[targetCol] <- "targetVar"
+
+# Standardize the class column to the name of targetVar if applicable
+colnames(xy_original)[targetCol] <- "targetVar"
 ```
 
 ```{r}
-# We create training datasets (xy_train, x_train, y_train) for various operations.
-# We create validation datasets (xy_test, x_test, y_test) for various operations.
+# We create training datasets (xy_train, x_train, y_train) for various visualization and cleaning/transformation operations.
+# We create testing datasets (xy_test, y_test) for various visualization and cleaning/transformation operations.
 set.seed(seedNum)
 
 # Create a list of the rows in the original dataset we can use for training
-training_index <- createDataPartition(originalDataset$targetVar, p=0.70, list=FALSE)
 # Use 70% of the data to train the models and the remaining for testing/validation
-xy_train <- originalDataset[training_index,]
-xy_test <- originalDataset[-training_index,]
+training_index <- createDataPartition(xy_original$targetVar, p=0.70, list=FALSE)
+xy_train <- xy_original[training_index,]
+xy_test <- xy_original[-training_index,]
 
 if (targetCol==1) {
 x_train <- xy_train[,(targetCol+1):totCol]
@@ -155,7 +159,7 @@ cat("Will attempt to create graphics grid (col x row): ", dispCol, ' by ', dispR
 
 ```{r}
 # Run algorithms using 10-fold cross validation
-control <- trainControl(method="repeatedcv", number=10, repeats=1)
+control <- trainControl(method="repeatedcv", number=10, repeats=3)
 metricTarget <- "Accuracy"
 ```
 
@@ -167,7 +171,7 @@ email_notify(paste("Library and Data Loading completed!",date()))
 To gain a better understanding of the data that we have on-hand, we will leverage a number of descriptive statistics and data visualization techniques. The plan is to use the results to consider new questions, review assumptions, and validate hypotheses that we can investigate later with specialized models.
 
 ```{r}
-email_notify(paste("Data Summary and Visualization has begun!",date()))
+email_notify(paste("Data Summarization and Visualization has begun!",date()))
 ```
 
 ### 2.a) Descriptive statistics
@@ -196,16 +200,16 @@ sapply(xy_train, class)
 summary(xy_train)
 ```
 
-#### 2.a.v) Summarize the levels of the class attribute.
-
-```{r}
-cbind(freq=table(y_train), percentage=prop.table(table(y_train))*100)
-```
-
-#### 2.a.vi) Count missing values.
+#### 2.a.v) Count missing values.
 
 ```{r}
 sapply(xy_train, function(x) sum(is.na(x)))
+```
+
+#### 2.a.vi) Summarize the levels of the class attribute.
+
+```{r}
+cbind(freq=table(y_train), percentage=prop.table(table(y_train))*100)
 ```
 
 ### 2.b) Data visualizations
@@ -261,7 +265,7 @@ corrplot(correlations, method="circle")
 ```
 
 ```{r}
-email_notify(paste("Data Summary and Visualization completed!",date()))
+email_notify(paste("Data Summarization and Visualization completed!",date()))
 ```
 
 ## 3. Prepare Data
@@ -279,6 +283,7 @@ email_notify(paste("Data Cleaning and Transformation has begun!",date()))
 
 ```{r}
 # Not applicable for this iteration of the project.
+# Sample code for performing basic data cleaning tasks
 
 # Mark missing values
 #invalid <- 0
@@ -291,19 +296,86 @@ email_notify(paste("Data Cleaning and Transformation has begun!",date()))
 ### 3.b) Feature Selection
 
 ```{r}
-# Not applicable for this iteration of the project.
+# Using the correlations calculated previously, we try to find attributes that are highly correlated.
+# highlyCorrelated <- findCorrelation(correlations, cutoff=0.85)
+# print(highlyCorrelated)
+# cat('Number of attributes found to be highly correlated:',length(highlyCorrelated))
+
+# Removing the highly correlated attributes from the training and validation dataframes
+# xy_train <- xy_train[, -highlyCorrelated]
+# xy_test <- xy_test[, -highlyCorrelated]
+```
+
+```{r}
+# Sample code for performing feature selection by ranking the attributes' importance.
+# startTimeModule <- proc.time()
+# set.seed(seedNum)
+# library(gbm)
+# model_fs <- train(targetVar~., data=xy_train, method="gbm", preProcess="scale", trControl=control, verbose=F)
+# rankedImportance <- varImp(model_fs, scale=FALSE)
+# print(rankedImportance)
+# plot(rankedImportance)
+
+# Set the importance threshold and calculate the list of attributes that don't contribute to the importance threshold
+# maxThreshold <- 0.99
+# rankedAttributes <- rankedImportance$importance
+# rankedAttributes <- rankedAttributes[order(-rankedAttributes$Overall),,drop=FALSE]
+# totalWeight <- sum(rankedAttributes)
+# i <- 1
+# accumWeight <- 0
+# exit_now <- FALSE
+# while ((i <= totAttr) & !exit_now) {
+#   accumWeight = accumWeight + rankedAttributes[i,]
+#   if ((accumWeight/totalWeight) >= maxThreshold) {
+#     exit_now <- TRUE
+#   } else {
+#     i <- i + 1
+#   }
+# }
+# lowImportance <- rankedAttributes[(i+1):(totAttr),,drop=FALSE]
+# lowAttributes <- rownames(lowImportance)
+# cat('Number of attributes contributed to the importance threshold:',i,"\n")
+# cat('Number of attributes found to be of low importance:',length(lowAttributes))
+
+# Removing the unselected attributes from the training and validation dataframes
+# xy_train <- xy_train[, !(names(xy_train) %in% lowAttributes)]
+# xy_test <- xy_test[, !(names(xy_test) %in% lowAttributes)]
+```
+
+```{r}
+# Sample code for perfoming feature selection using the Recursive Feature Elimination (RFE) technique
+# startTimeModule <- proc.time()
+# set.seed(seedNum)
+# rfeCTRL <- rfeControl(functions=rfFuncs, method="cv", number=10)
+# rfeResults <- rfe(xy_train[,1:totAttr], xy_train[,totCol], sizes=c(30:55), rfeControl=rfeCTRL)
+# print(rfeResults)
+# rfeAttributes <- predictors(rfeResults)
+# cat('Number of attributes identified from the RFE algorithm:',length(rfeAttributes))
+# print(rfeAttributes)
+# plot(rfeResults, type=c("g", "o"))
+
+# Removing the unselected attributes from the training and validation dataframes
+# rfeAttributes <- c(rfeAttributes,"targetVar")
+# xy_train <- xy_train[, (names(xy_train) %in% rfeAttributes)]
+# xy_test <- xy_test[, (names(xy_test) %in% rfeAttributes)]
 ```
 
 ### 3.c) Data Transforms
 
 ```{r}
-# Not applicable for this iteration of the project.
+# Sample code for performing SMOTE transformation to combat the unbalanced data
+# set.seed(seedNum)
+# xy_train <- SMOTE(targetVar ~., data=xy_train, perc.over=200, perc.under=300)
+# totCol <- ncol(xy_train)
+# y_train <- xy_train[,totCol]
+# cbind(freq=table(y_train), percentage=prop.table(table(y_train))*100)
 ```
 
 ### 3.d) Display the Final Dataset for Model-Building
 
 ```{r}
 dim(xy_train)
+dim(xy_test)
 ```
 
 ```{r}
@@ -326,7 +398,7 @@ For this project, we will evaluate one linear, three non-linear, and three ensem
 
 Linear Algorithm: Linear Discriminant Analysis
 
-Non-Linear Algorithms: Decision Trees (CART), k-Nearest Neighbors, and Support Vector Machine
+Non-Linear Algorithms: Decision Trees (CART) and k-Nearest Neighbors
 
 Ensemble Algorithms: Bagged CART, Random Forest, and Stochastic Gradient Boosting
 
@@ -369,17 +441,6 @@ proc.time()-startTimeModule
 email_notify(paste("k-Nearest Neighbors modeling completed!",date()))
 ```
 
-```{r SVM}
-# Support Vector Machine (Regression/Classification)
-email_notify(paste("Support Vector Machine modeling has begun!",date()))
-startTimeModule <- proc.time()
-set.seed(seedNum)
-fit.svm <- train(targetVar~., data=xy_train, method="svmRadial", metric=metricTarget, trControl=control)
-print(fit.svm)
-proc.time()-startTimeModule
-email_notify(paste("Support Vector Machine modeling completed!",date()))
-```
-
 ### 4.c) Generate models using ensemble algorithms
 In this section, we will explore the use and tuning of ensemble algorithms to see whether we can improve the results.
 
@@ -419,11 +480,11 @@ email_notify(paste("Stochastic Gradient Boosting modeling completed!",date()))
 ### 4.d) Compare baseline algorithms
 
 ```{r SPOT_CHECK}
-results <- resamples(list(LDA=fit.lda, CART=fit.cart, kNN=fit.knn, SVM=fit.svm, BagCART=fit.bagcart, RF=fit.rf, GBM=fit.gbm))
+results <- resamples(list(LDA=fit.lda, CART=fit.cart, kNN=fit.knn, BagCART=fit.bagcart, RF=fit.rf, GBM=fit.gbm))
 summary(results)
 dotplot(results)
 cat('The average accuracy from all models is:',
-    mean(c(results$values$`LDA~Accuracy`,results$values$`CART~Accuracy`,results$values$`kNN~Accuracy`,results$values$`SVM~Accuracy`,results$values$`BagCART~Accuracy`,results$values$`RF~Accuracy`,results$values$`GBM~Accuracy`)))
+    mean(c(results$values$`LDA~Accuracy`,results$values$`CART~Accuracy`,results$values$`kNN~Accuracy`,results$values$`BagCART~Accuracy`,results$values$`RF~Accuracy`,results$values$`GBM~Accuracy`)))
 ```
 
 ## 5. Improve Accuracy or Results
@@ -494,9 +555,9 @@ library(randomForest)
 set.seed(seedNum)
 
 # Combining the training and test datasets to form the original dataset that will be used for training the final model
-xy_train <- rbind(xy_train, xy_test)
+xy_complete <- rbind(xy_train, xy_test)
 
-finalModel <- randomForest(targetVar~., xy_train, mtry=4, na.action=na.omit)
+finalModel <- randomForest(targetVar~., xy_complete, mtry=4, na.action=na.omit)
 summary(finalModel)
 proc.time()-startTimeModule
 ```
