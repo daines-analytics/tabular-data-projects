@@ -17,7 +17,7 @@ SUMMARY: The purpose of this project is to construct a prediction model using va
 
 INTRODUCTION: This dataset is taken from the MiniBooNE experiment and is used to distinguish electron neutrinos (signal) from muon neutrinos (background). The data file is set up as follows. In the first line is the number of signal events followed by the number of background events. The records with the signal events come first, followed by the background events. Each line, after the first line, has the 50 particle ID variables for one event.
 
-ANALYSIS: The baseline performance of the eight algorithms achieved an average accuracy of 90.84%. Two algorithms (Bagged CART and Random Forest) achieved the top accuracy scores after the first round of modeling. After a series of tuning trials, Random Forest turned in the top result using the training data. It achieved an average accuracy of 93.74%. By optimizing the tuning parameters, the Random Forest algorithm processed the testing dataset with an accuracy of 93.91%, which was even better than the training data.
+ANALYSIS: The baseline performance of the eight algorithms achieved an average accuracy of 90.82%. Two algorithms (Bagged CART and Random Forest) achieved the top accuracy scores after the first round of modeling. After a series of tuning trials, Random Forest turned in the top result using the training data. It achieved an average accuracy of 93.74%. By optimizing the tuning parameters, the Random Forest algorithm processed the testing dataset with an accuracy of 93.91%, which was even better than the training data.
 
 CONCLUSION: For this iteration, the Random Forest algorithm achieved the best overall training and testing results. For this dataset, the Random Forest algorithm should be considered for further modeling or production use.
 
@@ -386,11 +386,11 @@ After the data-prep, we next work on finding a workable model by evaluating a su
 * Spot checking a suite of linear and nonlinear machine learning algorithms.
 * Comparing the estimated accuracy of algorithms.
 
-For this project, we will evaluate one linear, three non-linear, and three ensemble algorithms:
+For this project, we will evaluate one linear, two non-linear, and three ensemble algorithms:
 
 Linear Algorithm: Logistic Regression
 
-Non-Linear Algorithms: Decision Trees (CART), k-Nearest Neighbors, and Support Vector Machine
+Non-Linear Algorithms: Decision Trees (CART) and k-Nearest Neighbors
 
 Ensemble Algorithms: Bagged CART, Random Forest, and Stochastic Gradient Boosting
 
@@ -433,17 +433,6 @@ proc.time()-startTimeModule
 email_notify(paste("k-Nearest Neighbors modeling completed!",date()))
 ```
 
-```{r SVM}
-# Support Vector Machine (Regression/Classification)
-email_notify(paste("Support Vector Machine modeling has begun!",date()))
-startTimeModule <- proc.time()
-set.seed(seedNum)
-fit.svm <- train(targetVar~., data=xy_train, method="svmRadial", metric=metricTarget, trControl=control)
-print(fit.svm)
-proc.time()-startTimeModule
-email_notify(paste("Support Vector Machine modeling completed!",date()))
-```
-
 ### 4.c) Generate models using ensemble algorithms
 In this section, we will explore the use and tuning of ensemble algorithms to see whether we can improve the results.
 
@@ -483,11 +472,11 @@ email_notify(paste("Stochastic Gradient Boosting modeling completed!",date()))
 ### 4.d) Compare baseline algorithms
 
 ```{r SPOT_CHECK}
-results <- resamples(list(LR=fit.glm, CART=fit.cart, kNN=fit.knn, SVM=fit.svm, BagCART=fit.bagcart, RF=fit.rf, GBM=fit.gbm))
+results <- resamples(list(LR=fit.glm, CART=fit.cart, kNN=fit.knn, BagCART=fit.bagcart, RF=fit.rf, GBM=fit.gbm))
 summary(results)
 dotplot(results)
 cat('The average accuracy from all models is:',
-    mean(c(results$values$`LR~Accuracy`,results$values$`CART~Accuracy`,results$values$`kNN~Accuracy`,results$values$`SVM~Accuracy`,results$values$`BagCART~Accuracy`,results$values$`RF~Accuracy`,results$values$`GBM~Accuracy`)))
+    mean(c(results$values$`LR~Accuracy`,results$values$`CART~Accuracy`,results$values$`kNN~Accuracy`,results$values$`BagCART~Accuracy`,results$values$`RF~Accuracy`,results$values$`GBM~Accuracy`)))
 ```
 
 ## 5. Improve Accuracy or Results
