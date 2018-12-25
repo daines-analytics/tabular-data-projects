@@ -14517,8 +14517,8 @@ dtype: int64</pre>
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Not applicable for this iteration of the project.</span>
 <span class="c1"># Sample code for performing Attribute Importance Ranking (Block #3 of 3)</span>
 <span class="c1"># Removing the unselected attributes from the training and validation dataframes</span>
-<span class="c1"># xy_train_df &lt;- xy_train_df[, !(names(xy_train_df) %in% lowAttributes)]</span>
-<span class="c1"># xy_test_df &lt;- xy_test_df[, !(names(xy_test_df) %in% lowAttributes)]</span>
+<span class="c1"># x_train_df.drop(labels=lowAttributes, axis=1, inplace=True)</span>
+<span class="c1"># x_test_df.drop(labels=lowAttributes, axis=1, inplace=True)</span>
 </pre></div>
 
     </div>
@@ -14760,23 +14760,23 @@ x_test.shape: (152, 13) y_test.shape: (152,)
 
 <div class="output_subarea output_stream output_stdout output_text">
 <pre>LR: -25.612033 (13.351275)
-Model training time: 0:00:00.011994
+Model training time: 0:00:00.025976
 RR: -25.790544 (13.693551)
-Model training time: 0:00:00.015991
+Model training time: 0:00:00.021988
 LASSO: -29.758615 (14.872414)
-Model training time: 0:00:00.022987
+Model training time: 0:00:00.013973
 EN: -29.428369 (14.921289)
-Model training time: 0:00:00.011992
+Model training time: 0:00:00.011975
 CART: -22.339652 (15.928947)
-Model training time: 0:00:00.028957
+Model training time: 0:00:00.029981
 KNN: -50.328254 (29.718809)
-Model training time: 0:00:00.012971
+Model training time: 0:00:00.013991
 RF: -14.981121 (11.652530)
-Model training time: 0:00:00.230430
+Model training time: 0:00:00.223833
 ET: -15.083016 (9.266903)
-Model training time: 0:00:00.178901
+Model training time: 0:00:00.179896
 GBM: -13.145342 (10.777361)
-Model training time: 0:00:00.386826
+Model training time: 0:00:00.396702
 Average metrics (neg_mean_squared_error) from all models: -25.16299399907568
 </pre>
 </div>
@@ -14909,7 +14909,7 @@ Average metrics (neg_mean_squared_error) from all models: -25.16299399907568
 -14.114891 (12.623699) with: {&#39;n_estimators&#39;: 60}
 -14.019512 (12.675438) with: {&#39;n_estimators&#39;: 80}
 -14.069409 (12.713605) with: {&#39;n_estimators&#39;: 100}
-Model training time: 0:00:06.685645
+Model training time: 0:00:06.885060
 </pre>
 </div>
 </div>
@@ -14964,7 +14964,7 @@ Model training time: 0:00:06.685645
 -13.092781 (10.732011) with: {&#39;n_estimators&#39;: 100}
 -13.179800 (10.883205) with: {&#39;n_estimators&#39;: 125}
 -13.232407 (10.999644) with: {&#39;n_estimators&#39;: 150}
-Model training time: 0:00:02.121719
+Model training time: 0:00:02.049756
 </pre>
 </div>
 </div>
@@ -15126,7 +15126,7 @@ Model training time: 0:00:02.121719
 
 <div class="output_subarea output_stream output_stdout output_text">
 <pre>x_complete.shape: (506, 13) y_complete.shape: (506,)
-Model training time: 0:00:00.063960
+Model training time: 0:00:00.064980
 </pre>
 </div>
 </div>
@@ -15179,7 +15179,7 @@ Model training time: 0:00:00.063960
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Total time for the script: 0:01:12.477583
+<pre>Total time for the script: 0:00:57.065207
 </pre>
 </div>
 </div>
