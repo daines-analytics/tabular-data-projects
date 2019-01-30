@@ -19,11 +19,11 @@ INTRODUCTION: The research team carried out experiments with a group of 30 volun
 
 In the current iteration Take1, the script will focus on evaluating various machine learning algorithms and identifying the model that produces the best overall metrics. Because the dataset has many attributes that are collinear with other attributes, we will eliminate the attributes that have a collinearity measurement of 99% or higher. Iteration Take1 will establish the baseline performance for accuracy and processing time.
 
-ANALYSIS: In the current iteration Take1, the baseline performance of the machine learning algorithms achieved an average accuracy of 89.61%. Two algorithms (Linear Discriminant Analysis and Stochastic Gradient Boosting) achieved the top accuracy metrics after the first round of modeling. After a series of tuning trials, Stochastic Gradient Boosting turned in the top overall result and achieved an accuracy metric of 97.70%. By using the optimized parameters, the Stochastic Gradient Boosting algorithm processed the testing dataset with an accuracy of 92.85%, which was below the training data and possibly due to over-fitting.
+ANALYSIS: In the current iteration Take1, the baseline performance of the machine learning algorithms achieved an average accuracy of 89.80%. Two algorithms (Linear Discriminant Analysis and eXtreme Gradient Boosting) achieved the top accuracy metrics after the first round of modeling. After a series of tuning trials, eXtreme Gradient Boosting turned in the top overall result and achieved an accuracy metric of 98.59%. By using the optimized parameters, the eXtreme Gradient Boosting algorithm processed the testing dataset with an accuracy of 93.67%, which was below the training data and possibly due to over-fitting.
 
 From the model-building perspective, the number of attributes decreased by 108, from 561 down to 453.
 
-CONCLUSION: For this iteration, the Stochastic Gradient Boosting algorithm achieved the best overall results. For this dataset, we should consider using the Stochastic Gradient Boosting algorithm for further modeling or production use.
+CONCLUSION: For this iteration, the eXtreme Gradient Boosting algorithm achieved the best overall results. For this dataset, we should consider using the eXtreme Gradient Boosting algorithm for further modeling or production use.
 
 Dataset Used: Smartphone-Based Recognition of Human Activities and Postural Transitions Data Set
 
@@ -374,24 +374,24 @@ email_notify(paste("Random Forest modeling completed!",date()))
 ```
 
 ```{r GBM}
-# Stochastic Gradient Boosting (Regression/Classification)
-email_notify(paste("Stochastic Gradient Boosting modeling has begun!",date()))
+# eXtreme Gradient Boosting (Regression/Classification)
+email_notify(paste("eXTreme Gradient Boosting modeling has begun!",date()))
 startTimeModule <- proc.time()
 set.seed(seedNum)
-fit.gbm <- train(targetVar~., data=xy_train, method="gbm", metric=metricTarget, trControl=control, verbose=F)
-print(fit.gbm)
+fit.xgb <- train(targetVar~., data=xy_train, method="xgbTree", metric=metricTarget, trControl=control, verbose=F)
+print(fit.xgb)
 proc.time()-startTimeModule
-email_notify(paste("Stochastic Gradient Boosting modeling completed!",date()))
+email_notify(paste("eXtreme Gradient Boosting modeling completed!",date()))
 ```
 
 ### 4.d) Compare baseline algorithms
 
 ```{r SPOT_CHECK}
-results <- resamples(list(LDA=fit.lda, CART=fit.cart, kNN=fit.knn, BagCART=fit.bagcart, RF=fit.rf, GBM=fit.gbm))
+results <- resamples(list(LDA=fit.lda, CART=fit.cart, kNN=fit.knn, BagCART=fit.bagcart, RF=fit.rf, XGB=fit.xgb))
 summary(results)
 dotplot(results)
 cat('The average accuracy from all models is:',
-    mean(c(results$values$`LDA~Accuracy`,results$values$`CART~Accuracy`,results$values$`kNN~Accuracy`,results$values$`BagCART~Accuracy`,results$values$`RF~Accuracy`,results$values$`GBM~Accuracy`)))
+    mean(c(results$values$`LDA~Accuracy`,results$values$`CART~Accuracy`,results$values$`kNN~Accuracy`,results$values$`BagCART~Accuracy`,results$values$`RF~Accuracy`,results$values$`XGB~Accuracy`)))
 ```
 
 ## 5. Improve Accuracy or Results
@@ -415,12 +415,12 @@ email_notify(paste("Algorithm #1 tuning completed!",date()))
 ```
 
 ```{r FINAL2}
-# Tuning algorithm #2 - Stochastic Gradient Boosting
+# Tuning algorithm #2 - eXtreme Gradient Boosting
 email_notify(paste("Algorithm #2 tuning has begun!",date()))
 startTimeModule <- proc.time()
 set.seed(seedNum)
-grid <- expand.grid(.n.trees=c(200,350,500), .shrinkage=0.1, .interaction.depth=3, .n.minobsinnode=10)
-fit.final2 <- train(targetVar~., data=xy_train, method="gbm", metric=metricTarget, tuneGrid=grid, trControl=control, verbose=F)
+grid <- expand.grid(nrounds = c(450,600,750), max_depth = 3, eta = 0.3, gamma = 0, colsample_bytree = 0.6, min_child_weight = 1, subsample = 1)
+fit.final2 <- train(targetVar~., data=xy_train, method="xgbTree", metric=metricTarget, tuneGrid=grid, trControl=control, verbose=F)
 plot(fit.final2)
 print(fit.final2)
 proc.time()-startTimeModule
@@ -430,7 +430,7 @@ email_notify(paste("Algorithm #2 tuning completed!",date()))
 ### 5.d) Compare Algorithms After Tuning
 
 ```{r POST_TUNING}
-results <- resamples(list(LDA=fit.final1, GBM=fit.final2))
+results <- resamples(list(LDA=fit.final1, XGB=fit.final2))
 summary(results)
 dotplot(results)
 ```
@@ -457,14 +457,19 @@ confusionMatrix(predictions, y_test$targetVar)
 
 ```{r}
 startTimeModule <- proc.time()
-library(gbm)
 set.seed(seedNum)
+#library(xgboost)
 
 # Combining the training and test datasets to form the original dataset that will be used for training the final model
 #xy_complete <- rbind(xy_train, xy_test)
+#totCol <- ncol(xy_complete)
+#x_complete <- xy_complete[,1:totCol]
+#y_complete <- xy_complete[,totCol]
+#dataMatrix <- data.matrix(x_complete)
+#labelMatrix <- data.matrix(y_complete)
 
-#finalModel <- gbm(targetVar~., xy_train, n.trees=350, shrinkage=0.1, interaction.depth=3, n.minobsinnode=1)
-#summary(finalModel)
+#finalModel <- xgboost(data=dataMatrix, label=labelMatrix, nrounds = 600, max_depth = 3, eta = 0.3, gamma = 0, colsample_bytree = 0.6, min_child_weight = 1, subsample = 1, verbosity=0)
+#summary(finalModel)
 proc.time()-startTimeModule
 ```
 
