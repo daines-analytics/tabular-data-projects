@@ -1,7 +1,7 @@
 ---
-title: "Multi-Class Classification Model for Human Activities and Postural Transitions Using R Take 1"
+title: "Multi-Class Classification Model for Human Activities and Postural Transitions Using R Take 2"
 author: "David Lowe"
-date: "February 1, 2019"
+date: "February 8, 2019"
 output: 
   html_document: 
     toc: yes
