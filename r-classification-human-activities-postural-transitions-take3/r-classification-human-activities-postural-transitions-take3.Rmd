@@ -31,9 +31,9 @@ In iteration Take2, the baseline performance of the machine learning algorithms 
 
 From the model-building perspective, the number of attributes decreased by 278, from 561 down to 283. The processing time went from 10 hours 17 minutes in iteration Take1 down to 7 hours 49 minutes in Take2, which was a reduction of 23.9%.
 
-In the current iteration Take3, the baseline performance of the machine learning algorithms achieved an average accuracy of 90.07%. Two algorithms (Random Forest and eXtreme Gradient Boosting) achieved the top accuracy metrics after the first round of modeling. After a series of tuning trials, eXtreme Gradient Boosting turned in the top overall result and achieved an accuracy metric of 98.37%. By using the optimized parameters, the eXtreme Gradient Boosting algorithm processed the testing dataset with an accuracy of 94.02%, which was below the training data and possibly due to over-fitting.
+In the current iteration Take3, the baseline performance of the machine learning algorithms achieved an average accuracy of 90.04%. Two algorithms (Random Forest and eXtreme Gradient Boosting) achieved the top accuracy metrics after the first round of modeling. After a series of tuning trials, eXtreme Gradient Boosting turned in the top overall result and achieved an accuracy metric of 98.35%. By using the optimized parameters, the eXtreme Gradient Boosting algorithm processed the testing dataset with an accuracy of 93.86%, which was below the training data and possibly due to over-fitting.
 
-From the model-building perspective, the number of attributes decreased by 62, from 561 down to 499. The processing time went from 10 hours 17 minutes in iteration Take1 up to 17 hours 35 minutes in Take3, which was an increase of 70.9%.
+From the model-building perspective, the number of attributes decreased by 62, from 561 down to 499. The processing time went from 10 hours 17 minutes in iteration Take1 up to 16 hours 59 minutes in Take3, which was an increase of 65.1%.
 
 CONCLUSION: For this iteration, the attribute importance ranking technique and using the eXtreme Gradient Boosting algorithm achieved the best overall results. For this dataset, we should consider using the eXtreme Gradient Boosting algorithm for further modeling or production use.
 
@@ -306,8 +306,8 @@ cat('Number of attributes found to be of low importance:',length(lowAttributes))
 
 ```{r}
 # Removing the unselected attributes from the training and validation dataframes
-# xy_train <- xy_train[, !(names(xy_train) %in% lowAttributes)]
-# xy_test <- xy_test[, !(names(xy_test) %in% lowAttributes)]
+xy_train <- xy_train[, !(names(xy_train) %in% lowAttributes)]
+xy_test <- xy_test[, !(names(xy_test) %in% lowAttributes)]
 ```
 
 ### 3.c) Data Transforms
@@ -411,7 +411,7 @@ proc.time()-startTimeModule
 email_notify(paste("Random Forest modeling completed!",date()))
 ```
 
-```{r GBM}
+```{r XGB}
 # eXtreme Gradient Boosting (Regression/Classification)
 email_notify(paste("eXTreme Gradient Boosting modeling has begun!",date()))
 startTimeModule <- proc.time()
@@ -445,7 +445,7 @@ Finally, we will tune the best-performing algorithms from each group further and
 email_notify(paste("Algorithm #1 tuning has begun!",date()))
 startTimeModule <- proc.time()
 set.seed(seedNum)
-grid <- expand.grid(mtry=c(2,55,108,162,217))
+grid <- expand.grid(mtry=c(2,125,250,375,499))
 fit.final1 <- train(targetVar~., data=xy_train, method="rf", metric=metricTarget, tuneGrid=grid, trControl=control)
 plot(fit.final1)
 print(fit.final1)
