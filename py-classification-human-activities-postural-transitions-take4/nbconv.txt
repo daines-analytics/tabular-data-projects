@@ -1,0 +1,1 @@
+jupyter nbconvert --to html py-classification-human-activities-postural-transitions-take4.ipynb
