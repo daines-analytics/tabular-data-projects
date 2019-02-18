@@ -1,7 +1,7 @@
 ---
-title: "Regression Model for [Project Name] Using R version 07"
+title: "Regression Model for [Project Name] Using R version 08"
 author: "David Lowe"
-date: "January 4, 2019"
+date: "February 22, 2019"
 output: 
   html_document: 
     toc: yes
@@ -70,8 +70,8 @@ set.seed(seedNum)
 email_notify <- function(msg=""){
   sender <- "luozhi2488@gmail.com"
   receiver <- "dave@contactdavidlowe.com"
-  sbj_line <- "Notification from R Script"
-  password <- readLines("../email_credential.txt")
+  sbj_line <- "Notification from R Regression Script"
+  password <- readLines("../../email_credential.txt")
   send.mail(
     from = sender,
     to = receiver,
@@ -90,18 +90,30 @@ email_notify(paste("Library and Data Loading has begun!",date()))
 ### 1.c) Load dataset
 
 ```{r}
-#originalDataset <- read.csv("some_dataset.csv", header= TRUE, stringsAsFactors = FALSE)
-data(BostonHousing)
-xy_original <- BostonHousing
+# Slicing up the document path to get the final destination file name
+dataset_path <- 'https://archive.ics.uci.edu/ml/machine-learning-databases/housing/housing.data'
+doc_path_list <- str_split(dataset_path, "/")
+dest_file <- doc_path_list[[1]][length(doc_path_list[[1]])]
+
+if (!file.exists(dest_file)) {
+  # Download the document from the website
+  cat("Downloading", dataset_path, "as", dest_file, "\n")
+  download.file(dataset_path, dest_file, mode = "wb")
+  cat(dest_file, "downloaded!\n")
+#  unzip(dest_file)
+#  cat(dest_file, "unpacked!\n")
+}
+
+inputFile <- dest_file
+colNames = c('CRIM','ZN','INDUS','CHAS','NOX','RM','AGE','DIS','RAD','TAX','PTRATIO','B','LSTAT','MEDV')
+widthVector <- c(8,7,8,3,8,8,7,8,4,7,7,7,7,7)
+xy_original <- read.fwf(inputFile, widths = widthVector, col.names = colNames)
 
 # Different ways of reading and processing the input dataset. Saving these for future references.
 #x_train <- read.fwf("X_train.txt", widths = widthVector, col.names = colNames)
 #y_train <- read.csv("y_train.txt", header = FALSE, col.names = c("targetVar"))
 #y_train$targetVar <- as.factor(y_train$targetVar)
 #xy_train <- cbind(x_train, y_train)
-
-# This particular dataset requires some data transformation prior to calculating the correlations
-xy_original[,'chas'] <- as.numeric(xy_original[,'chas'])
 ```
 
 ```{r}
@@ -272,6 +284,7 @@ email_notify(paste("Data Cleaning and Transformation has begun!",date()))
 ### 3.b) Feature Selection
 
 ```{r}
+# Not applicable for this iteration of the project.
 # Using the correlations calculated previously, we try to find attributes that are highly correlated.
 # highlyCorrelated <- findCorrelation(correlations, cutoff=0.85)
 # print(highlyCorrelated)
@@ -283,6 +296,7 @@ email_notify(paste("Data Cleaning and Transformation has begun!",date()))
 ```
 
 ```{r}
+# Not applicable for this iteration of the project.
 # Sample code for performing feature selection by ranking the attributes' importance.
 # startTimeModule <- proc.time()
 # set.seed(seedNum)
@@ -318,6 +332,7 @@ email_notify(paste("Data Cleaning and Transformation has begun!",date()))
 ```
 
 ```{r}
+# Not applicable for this iteration of the project.
 # Sample code for perfoming feature selection using the Recursive Feature Elimination (RFE) technique
 # startTimeModule <- proc.time()
 # set.seed(seedNum)
@@ -338,6 +353,7 @@ email_notify(paste("Data Cleaning and Transformation has begun!",date()))
 ### 3.c) Data Transforms
 
 ```{r}
+# Not applicable for this iteration of the project.
 # Sample code for performing SMOTE transformation to combat the unbalanced data
 # set.seed(seedNum)
 # xy_train <- SMOTE(targetVar ~., data=xy_train, perc.over=200, perc.under=300)

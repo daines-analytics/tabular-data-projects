@@ -1,7 +1,7 @@
 ---
-title: "Binary Classification Model for [Project Name] Using R version 07"
+title: "Binary Classification Model for [Project Name] Using R version 08"
 author: "David Lowe"
-date: "January 4, 2019"
+date: "February 22, 2019"
 output: 
   html_document: 
     toc: yes
@@ -13,21 +13,21 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Template Credit: Adapted from a template made available by Dr. Jason Brownlee of Machine Learning Mastery. [http://machinelearningmastery.com/]
 
-SUMMARY: [The purpose of this project is to construct a prediction model using various machine learning algorithms and to document the end-to-end steps using a template. The [Dataset Name] is a binary-class classification situation where we are trying to predict one of the two possible outcomes.]
+SUMMARY: [Sample Paragraph - The purpose of this project is to construct prediction model using various machine learning algorithms and to document the end-to-end steps using a template. The Connectionist Bench dataset is a classic binary classification situation where we are trying to predict one of the two possible outcomes.]
 
-INTRODUCTION: [Sample Paragraph - This dataset is originally from the National Institute of Diabetes and Digestive and Kidney Diseases. The objective of the dataset is to diagnostically predict whether or not a patient has diabetes, based on certain diagnostic measurements included in the dataset. Several constraints were placed on the selection of these instances from a larger database. In particular, all patients here are females at least 21 years old of Pima Indian heritage. The datasets consist of several medical predictor variables and one target variable, Outcome. Predictor variables include the number of pregnancies the patient has had, their BMI, insulin level, age, and so on.]
+INTRODUCTION: [Sample Paragraph - The data file patterns obtained by bouncing sonar signals off a metal cylinder or a rock at various angles and under various conditions. The transmitted sonar signal is a frequency-modulated chirp, rising in frequency. The data set contains signals obtained from a variety of different aspect angles, spanning 90 degrees for the cylinder and 180 degrees for the rock. Each pattern is a set of 60 numbers in the range 0.0 to 1.0. Each number represents the energy within a particular frequency band, integrated over a certain period of time.]
 
-ANALYSIS: [Sample Paragraph - The baseline performance of the machine learning algorithms achieved an average accuracy of 74.84%. Two algorithms (Logistic Regression and Stochastic Gradient Boosting) achieved the top accuracy metrics after the first round of modeling. After a series of tuning trials, Stochastic Gradient Boosting turned in the top overall result and achieved an accuracy metric of 76.71%. By using the optimized parameters, the Stochastic Gradient Boosting algorithm processed the testing dataset with an accuracy of 76.09%, which was just slightly below the best prediction with the training data.]
+ANALYSIS: [Sample Paragraph - The baseline performance of the machine learning algorithms achieved an average accuracy of 76.13%. Two algorithms (Random Forest and Stochastic Gradient Boosting) achieved the top accuracy metrics after the first round of modeling. After a series of tuning trials, Stochastic Gradient Boosting turned in the top overall result and achieved an accuracy metric of 82.44%. By using the optimized parameters, the Stochastic Gradient Boosting algorithm processed the testing dataset with an accuracy of 87.10%, which was better than the prediction with the training data.]
 
 CONCLUSION: [Sample Paragraph - For this iteration, the Stochastic Gradient Boosting algorithm achieved the top-tier training and validation results. For this dataset, the Stochastic Gradient Boosting algorithm should be considered for further modeling or production use.]
 
-Dataset Used: [Dataset Name - Pima Indians Diabetes Database]
+Dataset Used: [Connectionist Bench (Sonar, Mines vs. Rocks) Data Set]
 
 Dataset ML Model: Binary classification with [numerical | categorical] attributes
 
-Dataset Reference: [Dataset URL - https://www.kaggle.com/uciml/pima-indians-diabetes-database]
+Dataset Reference: [https://archive.ics.uci.edu/ml/datasets/Connectionist+Bench+%28Sonar%2C+Mines+vs.+Rocks%29]
 
-One potential source of performance benchmarks: [Benchmark URL - https://www.kaggle.com/uciml/pima-indians-diabetes-database]
+One potential source of performance benchmarks: [https://archive.ics.uci.edu/ml/datasets/Connectionist+Bench+%28Sonar%2C+Mines+vs.+Rocks%29]
 
 The project aims to touch on the following areas:
 
@@ -71,8 +71,8 @@ set.seed(seedNum)
 email_notify <- function(msg=""){
   sender <- "luozhi2488@gmail.com"
   receiver <- "dave@contactdavidlowe.com"
-  sbj_line <- "Notification from R Script"
-  password <- readLines("../email_credential.txt")
+  sbj_line <- "Notification from R Binary Classification Script"
+  password <- readLines("../../email_credential.txt")
   send.mail(
     from = sender,
     to = receiver,
@@ -91,9 +91,24 @@ email_notify(paste("Library and Data Loading has begun!",date()))
 ### 1.c) Load dataset
 
 ```{r}
-#originalDataset <- read.csv("some_dataset.csv", header= TRUE, stringsAsFactors = FALSE)
-data(PimaIndiansDiabetes)
-xy_original <- PimaIndiansDiabetes
+# Slicing up the document path to get the final destination file name
+dataset_path <- 'https://archive.ics.uci.edu/ml/machine-learning-databases/undocumented/connectionist-bench/sonar/sonar.all-data'
+doc_path_list <- str_split(dataset_path, "/")
+dest_file <- doc_path_list[[1]][length(doc_path_list[[1]])]
+
+if (!file.exists(dest_file)) {
+  # Download the document from the website
+  cat("Downloading", dataset_path, "as", dest_file, "\n")
+  download.file(dataset_path, dest_file, mode = "wb")
+  cat(dest_file, "downloaded!\n")
+#  unzip(dest_file)
+#  cat(dest_file, "unpacked!\n")
+}
+
+inputFile <- dest_file
+colNames <- paste0("attr",1:60)
+colNames <- c(colNames, 'targetVar')
+xy_original <- read.csv(inputFile, sep=',', header=FALSE, col.names = colNames)
 
 # Different ways of reading and processing the input dataset. Saving these for future references.
 #x_train <- read.fwf("X_train.txt", widths = widthVector, col.names = colNames)
@@ -117,8 +132,8 @@ totAttr <- totCol-1
 targetCol <- totCol
 
 # Standardize the class column to the name of targetVar if applicable
-colnames(xy_original)[targetCol] <- "targetVar"
-xy_original$targetVar <- relevel(xy_original$targetVar,"pos")
+#colnames(xy_original)[targetCol] <- "targetVar"
+#xy_original$targetVar <- relevel(xy_original$targetVar,"pos")
 ```
 
 ```{r}
@@ -245,18 +260,18 @@ for(i in 1:totAttr) {
 
 ```{r}
 # Scatterplot matrix colored by class
-pairs(targetVar~., data=xy_train, col=xy_train$targetVar)
+#pairs(targetVar~., data=xy_train, col=xy_train$targetVar)
 ```
 
 ```{r}
 # Box and whisker plots for each attribute by class
-scales <- list(x=list(relation="free"), y=list(relation="free"))
-featurePlot(x=x_train, y=y_train, plot="box", scales=scales)
+#scales <- list(x=list(relation="free"), y=list(relation="free"))
+#featurePlot(x=x_train, y=y_train, plot="box", scales=scales)
 ```
 
 ```{r}
 # Density plots for each attribute by class value
-featurePlot(x=x_train, y=y_train, plot="density", scales=scales)
+#featurePlot(x=x_train, y=y_train, plot="density", scales=scales)
 ```
 
 ```{r}
@@ -283,7 +298,7 @@ email_notify(paste("Data Cleaning and Transformation has begun!",date()))
 ### 3.a) Data Cleaning
 
 ```{r}
-# Not applicable for this iteration of the project.
+# Not applicable for this iteration of the project
 # Sample code for performing basic data cleaning tasks
 
 # Mark missing values
@@ -297,6 +312,7 @@ email_notify(paste("Data Cleaning and Transformation has begun!",date()))
 ### 3.b) Feature Selection
 
 ```{r}
+# Not applicable for this iteration of the project
 # Using the correlations calculated previously, we try to find attributes that are highly correlated.
 # highlyCorrelated <- findCorrelation(correlations, cutoff=0.85)
 # print(highlyCorrelated)
@@ -308,6 +324,7 @@ email_notify(paste("Data Cleaning and Transformation has begun!",date()))
 ```
 
 ```{r}
+# Not applicable for this iteration of the project
 # Sample code for performing feature selection by ranking the attributes' importance.
 # startTimeModule <- proc.time()
 # set.seed(seedNum)
@@ -344,6 +361,7 @@ email_notify(paste("Data Cleaning and Transformation has begun!",date()))
 ```
 
 ```{r}
+# Not applicable for this iteration of the project
 # Sample code for perfoming feature selection using the Recursive Feature Elimination (RFE) technique
 # startTimeModule <- proc.time()
 # set.seed(seedNum)
@@ -364,6 +382,7 @@ email_notify(paste("Data Cleaning and Transformation has begun!",date()))
 ### 3.c) Data Transforms
 
 ```{r}
+# Not applicable for this iteration of the project
 # Sample code for performing SMOTE transformation to combat the unbalanced data
 # set.seed(seedNum)
 # xy_train <- SMOTE(targetVar ~., data=xy_train, perc.over=200, perc.under=300)
@@ -497,12 +516,12 @@ Using the three best-perfoming algorithms from the previous section, we will Sea
 Finally, we will tune the best-performing algorithms from each group further and see whether we can get more accuracy out of them.
 
 ```{r FINAL1}
-# Tuning algorithm #1 - Logistic Regression
-# Logistic Regression has no special tuning parameters
+# Tuning algorithm #1 - Random Forest
 email_notify(paste("Algorithm #1 tuning has begun!",date()))
 startTimeModule <- proc.time()
 set.seed(seedNum)
-fit.final1 <- fit.glm
+grid <- expand.grid(mtry=c(2,15,30,45,60))
+fit.final1 <- train(targetVar~., data=xy_train, method="rf", metric=metricTarget, trControl=control)
 print(fit.final1)
 proc.time()-startTimeModule
 email_notify(paste("Algorithm #1 tuning completed!",date()))
@@ -513,7 +532,7 @@ email_notify(paste("Algorithm #1 tuning completed!",date()))
 email_notify(paste("Algorithm #2 tuning has begun!",date()))
 startTimeModule <- proc.time()
 set.seed(seedNum)
-grid <- expand.grid(.n.trees=c(50, 100, 200), .shrinkage=0.1, .interaction.depth=c(1, 2, 3), .n.minobsinnode=10)
+grid <- expand.grid(.n.trees=c(100,200,300), .shrinkage=0.1, .interaction.depth=c(1,2,3), .n.minobsinnode=10)
 fit.final2 <- train(targetVar~., data=xy_train, method="gbm", metric=metricTarget, tuneGrid=grid, trControl=control, verbose=F)
 plot(fit.final2)
 print(fit.final2)
@@ -524,7 +543,7 @@ email_notify(paste("Algorithm #2 tuning completed!",date()))
 ### 5.d) Compare Algorithms After Tuning
 
 ```{r POST_TUNING}
-results <- resamples(list(LR=fit.final1, GBM=fit.final2))
+results <- resamples(list(RF=fit.final1, GBM=fit.final2))
 summary(results)
 dotplot(results)
 ```
@@ -563,11 +582,12 @@ set.seed(seedNum)
 
 # Combining the training and test datasets to form the original dataset that will be used for training the final model
 xy_complete <- rbind(xy_train, xy_test)
+xy_complete$oldTarget <- xy_complete$targetVar
 xy_complete$targetVar <- 0
-xy_complete$targetVar[xy_complete$oldTarget=="pos"] <- 1
+xy_complete$targetVar[xy_complete$oldTarget=="M"] <- 1
 xy_complete$oldTarget <- NULL
 
-finalModel <- gbm(targetVar~., data=xy_complete, n.trees=100, shrinkage=0.1, interaction.depth=1, n.minobsinnode=10)
+finalModel <- gbm(targetVar~., data=xy_complete, n.trees=300, shrinkage=0.1, interaction.depth=2, n.minobsinnode=10)
 print(finalModel)
 proc.time()-startTimeModule
 ```
