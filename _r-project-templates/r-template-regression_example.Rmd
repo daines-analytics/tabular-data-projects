@@ -1,10 +1,11 @@
 ---
-title: "Regression Model for [Project Name] Using R version 08"
+title: "Regression Model for [Project Name] Using R version 09"
 author: "David Lowe"
-date: "February 22, 2019"
+date: "April 19, 2019"
 output: 
   html_document: 
     toc: yes
+    self_contained: true
 ---
 
 ```{r setup, include=FALSE}
@@ -17,7 +18,7 @@ SUMMARY: [The purpose of this project is to construct a prediction model using v
 
 INTRODUCTION: [Sample Paragraph - The dataset for this project originates from the UCI Machine Learning Repository. The Boston housing data was collected in 1978 and each of the 506 entries represent aggregated data about 14 features for homes from various suburbs in Boston, Massachusetts.]
 
-ANALYSIS: [Sample Paragraph - The baseline performance of the machine learning algorithms achieved an average RMSE of 4.492. Two algorithms (Random Forest and Stochastic Gradient Boosting) achieved the top RMSE metrics after the first round of modeling. After a series of tuning trials, Stochastic Gradient Boosting turned in the top overall result and achieved an RMSE metric of 3.083. By using the optimized parameters, the Stochastic Gradient Boosting algorithm processed the testing dataset with a RMSE of 3.554, which was slightly below the best prediction with the training data.]
+ANALYSIS: [Sample Paragraph - The baseline performance of the machine learning algorithms achieved an average RMSE of 4.478. Two algorithms (Random Forest and Stochastic Gradient Boosting) achieved the top RMSE metrics after the first round of modeling. After a series of tuning trials, Stochastic Gradient Boosting turned in the top overall result and achieved an RMSE metric of 3.155. By using the optimized parameters, the Stochastic Gradient Boosting algorithm processed the testing dataset with a RMSE of 3.216, which was slightly above the prediction using the training data.]
 
 CONCLUSION: [Sample Paragraph - For this iteration, the Stochastic Gradient Boosting algorithm achieved the top training and validation results. For this dataset, the Stochastic Gradient Boosting algorithm should be considered for further modeling or production use.]
 
@@ -68,10 +69,10 @@ set.seed(seedNum)
 
 ```{r}
 email_notify <- function(msg=""){
-  sender <- "luozhi2488@gmail.com"
-  receiver <- "dave@contactdavidlowe.com"
+  sender <- Sys.getenv("MAIL_USERNAME")
+  receiver <- Sys.getenv("MAIL_RECEIVER")
+  password <- Sys.getenv("MAIL_PASSWORD")
   sbj_line <- "Notification from R Regression Script"
-  password <- readLines("../../email_credential.txt")
   send.mail(
     from = sender,
     to = receiver,
@@ -391,7 +392,7 @@ Linear Algorithm: Linear Regression, Ridge, The Lasso, Elasticnet
 
 Non-Linear Algorithms: Decision Trees (CART) and k-Nearest Neighbors
 
-Ensemble Algorithms: Bagged CART, Random Forest, and Stochastic Gradient Boosting
+Ensemble Algorithms: Bagged CART, Random Forest, and eXtreme Gradient Boosting
 
 The random number seed is reset before each run to ensure that the evaluation of each algorithm is performed using the same data splits. It ensures the results are directly comparable.
 
@@ -490,25 +491,25 @@ proc.time()-startTimeModule
 email_notify(paste("Random Forest modeling completed!",date()))
 ```
 
-```{r GBM}
-# Stochastic Gradient Boosting (Regression/Classification)
-email_notify(paste("Stochastic Gradient Boosting modeling has begun!",date()))
+```{r XGB}
+# eXtreme Gradient Boosting (Regression/Classification)
+email_notify(paste("eXtreme Gradient Boosting modeling has begun!",date()))
 startTimeModule <- proc.time()
 set.seed(seedNum)
-fit.gbm <- train(targetVar~., data=xy_train, method="gbm", metric=metricTarget, trControl=control, verbose=F)
-print(fit.gbm)
+fit.xgb <- train(targetVar~., data=xy_train, method="xgbTree", metric=metricTarget, trControl=control, verbose=F)
+print(fit.xgb)
 proc.time()-startTimeModule
-email_notify(paste("Stochastic Gradient Boosting modeling completed!",date()))
+email_notify(paste("eXtreme Gradient Boosting modeling completed!",date()))
 ```
 
 ### 4.d) Compare baseline algorithms
 
 ```{r SPOT_CHECK}
-results <- resamples(list(LR=fit.lm, CART=fit.cart, kNN=fit.knn, BagCART=fit.bagcart, RF=fit.rf, GBM=fit.gbm))
+results <- resamples(list(LR=fit.lm, CART=fit.cart, kNN=fit.knn, BagCART=fit.bagcart, RF=fit.rf, XGB=fit.xgb))
 summary(results)
 dotplot(results)
 cat('The average RMSE from all models is:',
-    mean(c(results$values$`LR~RMSE`,results$values$`CART~RMSE`,results$values$`kNN~RMSE`,results$values$`BagCART~RMSE`,results$values$`RF~RMSE`,results$values$`GBM~RMSE`)))
+    mean(c(results$values$`LR~RMSE`,results$values$`CART~RMSE`,results$values$`kNN~RMSE`,results$values$`BagCART~RMSE`,results$values$`RF~RMSE`,results$values$`GBM~RMSE`,results$values$`XGB~RMSE`)))
 ```
 
 ## 5. Improve Accuracy or Results
@@ -524,7 +525,7 @@ Finally, we will tune the best-performing algorithms from each group further and
 email_notify(paste("Algorithm #1 tuning has begun!",date()))
 startTimeModule <- proc.time()
 set.seed(seedNum)
-grid <- expand.grid(mtry = c(4:8))
+grid <- expand.grid(mtry = c(4,7,10,13))
 fit.final1 <- train(targetVar~., data=xy_train, method="rf", metric=metricTarget, tuneGrid=grid, trControl=control)
 plot(fit.final1)
 print(fit.final1)
@@ -533,12 +534,12 @@ email_notify(paste("Algorithm #1 tuning completed!",date()))
 ```
 
 ```{r FINAL2}
-# Tuning algorithm #2 - Stochastic Gradient Boosting
+# Tuning algorithm #2 - eXtreme Gradient Boosting
 email_notify(paste("Algorithm #2 tuning has begun!",date()))
 startTimeModule <- proc.time()
 set.seed(seedNum)
-grid <- expand.grid(.n.trees=c(250, 400, 550), .shrinkage=0.1, .interaction.depth=c(1, 2, 3), .n.minobsinnode=10)
-fit.final2 <- train(targetVar~., data=xy_train, method="gbm", metric=metricTarget, tuneGrid=grid, trControl=control, verbose=F)
+grid <- expand.grid(nrounds=c(50,100,200,300), max_depth=3, eta=0.3, gamma=0, colsample_bytree=0.8, min_child_weight=1, subsample=0.75)
+fit.final2 <- train(targetVar~., data=xy_train, method="xgbTree", metric=metricTarget, tuneGrid=grid, trControl=control, verbose=F)
 plot(fit.final2)
 print(fit.final2)
 proc.time()-startTimeModule
@@ -548,7 +549,7 @@ email_notify(paste("Algorithm #2 tuning completed!",date()))
 ### 5.d) Compare Algorithms After Tuning
 
 ```{r POST_TUNING}
-results <- resamples(list(RF=fit.final1, GBM=fit.final2))
+results <- resamples(list(RF=fit.final1, XGB=fit.final2))
 summary(results)
 dotplot(results)
 ```
@@ -567,7 +568,7 @@ email_notify(paste("Model Validation and Final Model Creation has begun!",date()
 ### 6.a) Predictions on validation dataset
 
 ```{r PREDICT}
-predictions <- predict(fit.final2, newdata=xy_test)
+predictions <- predict(fit.final1, newdata=xy_test)
 print(RMSE(predictions, y_test))
 print(R2(predictions, y_test))
 ```
@@ -576,13 +577,13 @@ print(R2(predictions, y_test))
 
 ```{r FINALMODEL}
 startTimeModule <- proc.time()
-library(gbm)
+library(randomForest)
 set.seed(seedNum)
 
 # Combining the training and test datasets to form the original dataset that will be used for training the final model
 xy_complete <- rbind(xy_train, xy_test)
 
-finalModel <- gbm(targetVar~., data=xy_complete, n.trees=550, shrinkage=0.1, interaction.depth=3, n.minobsinnode=10)
+finalModel <- randomForest(targetVar~., xy_complete, mtry=7, na.action=na.omit)
 summary(finalModel)
 proc.time()-startTimeModule
 ```

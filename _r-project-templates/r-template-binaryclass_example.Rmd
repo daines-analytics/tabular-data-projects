@@ -1,10 +1,11 @@
 ---
-title: "Binary Classification Model for [Project Name] Using R version 08"
+title: "Binary Classification Model for [Project Name] Using R version 09"
 author: "David Lowe"
-date: "February 22, 2019"
+date: "April 19, 2019"
 output: 
   html_document: 
     toc: yes
+    self_contained: true
 ---
 
 ```{r setup, include=FALSE}
@@ -17,9 +18,9 @@ SUMMARY: [Sample Paragraph - The purpose of this project is to construct predict
 
 INTRODUCTION: [Sample Paragraph - The data file patterns obtained by bouncing sonar signals off a metal cylinder or a rock at various angles and under various conditions. The transmitted sonar signal is a frequency-modulated chirp, rising in frequency. The data set contains signals obtained from a variety of different aspect angles, spanning 90 degrees for the cylinder and 180 degrees for the rock. Each pattern is a set of 60 numbers in the range 0.0 to 1.0. Each number represents the energy within a particular frequency band, integrated over a certain period of time.]
 
-ANALYSIS: [Sample Paragraph - The baseline performance of the machine learning algorithms achieved an average accuracy of 76.13%. Two algorithms (Random Forest and Stochastic Gradient Boosting) achieved the top accuracy metrics after the first round of modeling. After a series of tuning trials, Stochastic Gradient Boosting turned in the top overall result and achieved an accuracy metric of 82.44%. By using the optimized parameters, the Stochastic Gradient Boosting algorithm processed the testing dataset with an accuracy of 87.10%, which was better than the prediction with the training data.]
+ANALYSIS: [Sample Paragraph - The baseline performance of the machine learning algorithms achieved an average accuracy of 77.08%. Two algorithms (Random Forest and eXtreme Gradient Boosting) achieved the top accuracy metrics after the first round of modeling. After a series of tuning trials, eXtreme Gradient Boosting turned in the top overall result and achieved an accuracy metric of 82.23%. By using the optimized parameters, the eXtreme Gradient Boosting algorithm processed the testing dataset with an accuracy of 88.71%, which was better than the prediction with the training data.]
 
-CONCLUSION: [Sample Paragraph - For this iteration, the Stochastic Gradient Boosting algorithm achieved the top-tier training and validation results. For this dataset, the Stochastic Gradient Boosting algorithm should be considered for further modeling or production use.]
+CONCLUSION: [Sample Paragraph - For this iteration, the eXtreme Gradient Boosting algorithm achieved the top-tier training and validation results. For this dataset, the eXtreme Gradient Boosting algorithm should be considered for further modeling or production use.]
 
 Dataset Used: [Connectionist Bench (Sonar, Mines vs. Rocks) Data Set]
 
@@ -69,10 +70,10 @@ set.seed(seedNum)
 
 ```{r}
 email_notify <- function(msg=""){
-  sender <- "luozhi2488@gmail.com"
-  receiver <- "dave@contactdavidlowe.com"
+  sender <- Sys.getenv("MAIL_USERNAME")
+  receiver <- Sys.getenv("MAIL_RECEIVER")
+  password <- Sys.getenv("MAIL_PASSWORD")
   sbj_line <- "Notification from R Binary Classification Script"
-  password <- readLines("../../email_credential.txt")
   send.mail(
     from = sender,
     to = receiver,
@@ -420,7 +421,7 @@ Linear Algorithm: Logistic Regression
 
 Non-Linear Algorithms: Decision Trees (CART) and k-Nearest Neighbors
 
-Ensemble Algorithms: Bagged CART, Random Forest, and Stochastic Gradient Boosting
+Ensemble Algorithms: Bagged CART, Random Forest, and eXtreme Gradient Boosting
 
 The random number seed is reset before each run to ensure that the evaluation of each algorithm is performed using the same data splits. It ensures the results are directly comparable.
 
@@ -486,25 +487,25 @@ proc.time()-startTimeModule
 email_notify(paste("Random Forest modeling completed!",date()))
 ```
 
-```{r GBM}
-# Stochastic Gradient Boosting (Regression/Classification)
-email_notify(paste("Stochastic Gradient Boosting modeling has begun!",date()))
+```{r XGB}
+# eXtreme Gradient Boosting (Regression/Classification)
+email_notify(paste("eXtreme Gradient Boosting modeling has begun!",date()))
 startTimeModule <- proc.time()
 set.seed(seedNum)
-fit.gbm <- train(targetVar~., data=xy_train, method="gbm", metric=metricTarget, trControl=control, verbose=F)
-print(fit.gbm)
+fit.xgb <- train(targetVar~., data=xy_train, method="xgbTree", metric=metricTarget, trControl=control, verbose=F)
+print(fit.xgb)
 proc.time()-startTimeModule
-email_notify(paste("Stochastic Gradient Boosting modeling completed!",date()))
+email_notify(paste("eXtreme Gradient Boosting modeling completed!",date()))
 ```
 
 ### 4.d) Compare baseline algorithms
 
 ```{r SPOT_CHECK}
-results <- resamples(list(LR=fit.glm, CART=fit.cart, kNN=fit.knn, BagCART=fit.bagcart, RF=fit.rf, GBM=fit.gbm))
+results <- resamples(list(LR=fit.glm, CART=fit.cart, kNN=fit.knn, BagCART=fit.bagcart, RF=fit.rf, XGB=fit.xgb))
 summary(results)
 dotplot(results)
 cat('The average accuracy from all models is:',
-    mean(c(results$values$`LR~Accuracy`,results$values$`CART~Accuracy`,results$values$`kNN~Accuracy`,results$values$`BagCART~Accuracy`,results$values$`RF~Accuracy`,results$values$`GBM~Accuracy`)))
+    mean(c(results$values$`LR~Accuracy`,results$values$`CART~Accuracy`,results$values$`kNN~Accuracy`,results$values$`BagCART~Accuracy`,results$values$`RF~Accuracy`,results$values$`XGB~Accuracy`)))
 ```
 
 ## 5. Improve Accuracy or Results
@@ -528,12 +529,12 @@ email_notify(paste("Algorithm #1 tuning completed!",date()))
 ```
 
 ```{r FINAL2}
-# Tuning algorithm #2 - Stochastic Gradient Boosting
+# Tuning algorithm #2 - eXtreme Gradient Boosting
 email_notify(paste("Algorithm #2 tuning has begun!",date()))
 startTimeModule <- proc.time()
 set.seed(seedNum)
-grid <- expand.grid(.n.trees=c(100,200,300), .shrinkage=0.1, .interaction.depth=c(1,2,3), .n.minobsinnode=10)
-fit.final2 <- train(targetVar~., data=xy_train, method="gbm", metric=metricTarget, tuneGrid=grid, trControl=control, verbose=F)
+grid <- expand.grid(nrounds=c(50,100,200,300), max_depth=1, eta=0.3, gamma=0, colsample_bytree=0.8, min_child_weight=1, subsample=0.75)
+fit.final2 <- train(targetVar~., data=xy_train, method="xgbTree", metric=metricTarget, tuneGrid=grid, trControl=control, verbose=F)
 plot(fit.final2)
 print(fit.final2)
 proc.time()-startTimeModule
@@ -543,7 +544,7 @@ email_notify(paste("Algorithm #2 tuning completed!",date()))
 ### 5.d) Compare Algorithms After Tuning
 
 ```{r POST_TUNING}
-results <- resamples(list(RF=fit.final1, GBM=fit.final2))
+results <- resamples(list(RF=fit.final1, XGB=fit.final2))
 summary(results)
 dotplot(results)
 ```
@@ -577,17 +578,16 @@ auc
 
 ```{r FINALMODEL}
 startTimeModule <- proc.time()
-library(gbm)
+library(xgboost)
 set.seed(seedNum)
 
 # Combining the training and test datasets to form the original dataset that will be used for training the final model
 xy_complete <- rbind(xy_train, xy_test)
-xy_complete$oldTarget <- xy_complete$targetVar
-xy_complete$targetVar <- 0
-xy_complete$targetVar[xy_complete$oldTarget=="M"] <- 1
-xy_complete$oldTarget <- NULL
+y_final <- xy_complete$targetVar
+xy_complete$targetVar <- NULL
+x_final <- as.matrix(xy_complete)
 
-finalModel <- gbm(targetVar~., data=xy_complete, n.trees=300, shrinkage=0.1, interaction.depth=2, n.minobsinnode=10)
+finalModel <- xgboost(data=x_final, label=y_final, nrounds=200, max_depth=1, eta=0.3, gamma=0, colsample_bytree=0.8, min_child_weight=1, subsample=0.75)
 print(finalModel)
 proc.time()-startTimeModule
 ```
