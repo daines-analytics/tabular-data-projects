@@ -421,7 +421,7 @@ Linear Algorithm: Logistic Regression
 
 Non-Linear Algorithms: Decision Trees (CART) and k-Nearest Neighbors
 
-Ensemble Algorithms: Bagged CART, Random Forest, and eXtreme Gradient Boosting
+Ensemble Algorithms: Bagged CART, Random Forest, and Gradient Boosting
 
 The random number seed is reset before each run to ensure that the evaluation of each algorithm is performed using the same data splits. It ensures the results are directly comparable.
 
@@ -487,25 +487,26 @@ proc.time()-startTimeModule
 email_notify(paste("Random Forest modeling completed!",date()))
 ```
 
-```{r XGB}
-# eXtreme Gradient Boosting (Regression/Classification)
-email_notify(paste("eXtreme Gradient Boosting modeling has begun!",date()))
+```{r GBM}
+# Gradient Boosting (Regression/Classification)
+email_notify(paste("Gradient Boosting modeling has begun!",date()))
 startTimeModule <- proc.time()
 set.seed(seedNum)
-fit.xgb <- train(targetVar~., data=xy_train, method="xgbTree", metric=metricTarget, trControl=control, verbose=F)
-print(fit.xgb)
+fit.gbm <- train(targetVar~., data=xy_train, method="xgbTree", metric=metricTarget, trControl=control, verbose=F)
+# fit.gbm <- train(targetVar~., data=xy_train, method="gbm", metric=metricTarget, trControl=control, verbose=F)
+print(fit.gbm)
 proc.time()-startTimeModule
-email_notify(paste("eXtreme Gradient Boosting modeling completed!",date()))
+email_notify(paste("Gradient Boosting modeling completed!",date()))
 ```
 
 ### 4.d) Compare baseline algorithms
 
 ```{r SPOT_CHECK}
-results <- resamples(list(LR=fit.glm, CART=fit.cart, kNN=fit.knn, BagCART=fit.bagcart, RF=fit.rf, XGB=fit.xgb))
+results <- resamples(list(LR=fit.glm, CART=fit.cart, kNN=fit.knn, BagCART=fit.bagcart, RF=fit.rf, GBM=fit.gbm))
 summary(results)
 dotplot(results)
 cat('The average accuracy from all models is:',
-    mean(c(results$values$`LR~Accuracy`,results$values$`CART~Accuracy`,results$values$`kNN~Accuracy`,results$values$`BagCART~Accuracy`,results$values$`RF~Accuracy`,results$values$`XGB~Accuracy`)))
+    mean(c(results$values$`LR~Accuracy`,results$values$`CART~Accuracy`,results$values$`kNN~Accuracy`,results$values$`BagCART~Accuracy`,results$values$`RF~Accuracy`,results$values$`GBM~Accuracy`)))
 ```
 
 ## 5. Improve Accuracy or Results
@@ -529,7 +530,7 @@ email_notify(paste("Algorithm #1 tuning completed!",date()))
 ```
 
 ```{r FINAL2}
-# Tuning algorithm #2 - eXtreme Gradient Boosting
+# Tuning algorithm #2 - Gradient Boosting
 email_notify(paste("Algorithm #2 tuning has begun!",date()))
 startTimeModule <- proc.time()
 set.seed(seedNum)
@@ -544,7 +545,7 @@ email_notify(paste("Algorithm #2 tuning completed!",date()))
 ### 5.d) Compare Algorithms After Tuning
 
 ```{r POST_TUNING}
-results <- resamples(list(RF=fit.final1, XGB=fit.final2))
+results <- resamples(list(RF=fit.final1, GBM=fit.final2))
 summary(results)
 dotplot(results)
 ```

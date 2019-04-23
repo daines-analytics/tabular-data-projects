@@ -18,7 +18,7 @@ SUMMARY: [The purpose of this project is to construct a prediction model using v
 
 INTRODUCTION: [Sample Paragraph - The dataset for this project originates from the UCI Machine Learning Repository. The Boston housing data was collected in 1978 and each of the 506 entries represent aggregated data about 14 features for homes from various suburbs in Boston, Massachusetts.]
 
-ANALYSIS: [Sample Paragraph - The baseline performance of the machine learning algorithms achieved an average RMSE of 4.478. Two algorithms (Random Forest and Stochastic Gradient Boosting) achieved the top RMSE metrics after the first round of modeling. After a series of tuning trials, Stochastic Gradient Boosting turned in the top overall result and achieved an RMSE metric of 3.155. By using the optimized parameters, the Stochastic Gradient Boosting algorithm processed the testing dataset with a RMSE of 3.216, which was slightly above the prediction using the training data.]
+ANALYSIS: [Sample Paragraph - The baseline performance of the machine learning algorithms achieved an average RMSE of 4.561. Two algorithms (Random Forest and Stochastic Gradient Boosting) achieved the top RMSE metrics after the first round of modeling. After a series of tuning trials, Stochastic Gradient Boosting turned in the top overall result and achieved an RMSE metric of 3.155. By using the optimized parameters, the Stochastic Gradient Boosting algorithm processed the testing dataset with a RMSE of 3.216, which was slightly above the prediction using the training data.]
 
 CONCLUSION: [Sample Paragraph - For this iteration, the Stochastic Gradient Boosting algorithm achieved the top training and validation results. For this dataset, the Stochastic Gradient Boosting algorithm should be considered for further modeling or production use.]
 
@@ -392,7 +392,7 @@ Linear Algorithm: Linear Regression, Ridge, The Lasso, Elasticnet
 
 Non-Linear Algorithms: Decision Trees (CART) and k-Nearest Neighbors
 
-Ensemble Algorithms: Bagged CART, Random Forest, and eXtreme Gradient Boosting
+Ensemble Algorithms: Bagged CART, Random Forest, and Gradient Boosting
 
 The random number seed is reset before each run to ensure that the evaluation of each algorithm is performed using the same data splits. It ensures the results are directly comparable.
 
@@ -491,25 +491,26 @@ proc.time()-startTimeModule
 email_notify(paste("Random Forest modeling completed!",date()))
 ```
 
-```{r XGB}
-# eXtreme Gradient Boosting (Regression/Classification)
-email_notify(paste("eXtreme Gradient Boosting modeling has begun!",date()))
+```{r GBM}
+# Gradient Boosting (Regression/Classification)
+email_notify(paste("Gradient Boosting modeling has begun!",date()))
 startTimeModule <- proc.time()
 set.seed(seedNum)
-fit.xgb <- train(targetVar~., data=xy_train, method="xgbTree", metric=metricTarget, trControl=control, verbose=F)
-print(fit.xgb)
+fit.gbm <- train(targetVar~., data=xy_train, method="xgbTree", metric=metricTarget, trControl=control, verbose=F)
+# fit.gbm <- train(targetVar~., data=xy_train, method="gbm", metric=metricTarget, trControl=control, verbose=F)
+print(fit.gbm)
 proc.time()-startTimeModule
-email_notify(paste("eXtreme Gradient Boosting modeling completed!",date()))
+email_notify(paste("Gradient Boosting modeling completed!",date()))
 ```
 
 ### 4.d) Compare baseline algorithms
 
 ```{r SPOT_CHECK}
-results <- resamples(list(LR=fit.lm, CART=fit.cart, kNN=fit.knn, BagCART=fit.bagcart, RF=fit.rf, XGB=fit.xgb))
+results <- resamples(list(LR=fit.lm, RIDGE=fit.ridge, LASSO=fit.lasso, ENET=fit.enet, CART=fit.cart, kNN=fit.knn, BagCART=fit.bagcart, RF=fit.rf, GBM=fit.gbm))
 summary(results)
 dotplot(results)
 cat('The average RMSE from all models is:',
-    mean(c(results$values$`LR~RMSE`,results$values$`CART~RMSE`,results$values$`kNN~RMSE`,results$values$`BagCART~RMSE`,results$values$`RF~RMSE`,results$values$`GBM~RMSE`,results$values$`XGB~RMSE`)))
+    mean(c(results$values$`LR~RMSE`,results$values$`RIDGE~RMSE`,results$values$`LASSO~RMSE`,results$values$`ENET~RMSE`,results$values$`CART~RMSE`,results$values$`kNN~RMSE`,results$values$`BagCART~RMSE`,results$values$`RF~RMSE`,results$values$`GBM~RMSE`)))
 ```
 
 ## 5. Improve Accuracy or Results
@@ -534,7 +535,7 @@ email_notify(paste("Algorithm #1 tuning completed!",date()))
 ```
 
 ```{r FINAL2}
-# Tuning algorithm #2 - eXtreme Gradient Boosting
+# Tuning algorithm #2 - Gradient Boosting
 email_notify(paste("Algorithm #2 tuning has begun!",date()))
 startTimeModule <- proc.time()
 set.seed(seedNum)
@@ -549,7 +550,7 @@ email_notify(paste("Algorithm #2 tuning completed!",date()))
 ### 5.d) Compare Algorithms After Tuning
 
 ```{r POST_TUNING}
-results <- resamples(list(RF=fit.final1, XGB=fit.final2))
+results <- resamples(list(RF=fit.final1, GBM=fit.final2))
 summary(results)
 dotplot(results)
 ```
