@@ -30,8 +30,6 @@ From the model-building perspective, the number of attributes decreased by 541, 
 
 CONCLUSION: For this iteration, using the Attribute Importance Ranking technique and the Gradient Boosting algorithm achieved the best overall modeling results. Using feature selection technique further reduced the processing time while achieving an even better prediction accuracy overall. For this dataset, Gradient Boosting should be considered for further modeling or production use.
 
-CONCLUSION: For this iteration, the Random Forest algorithm achieved the best overall results using the training and testing datasets. For this dataset, Random Forest should be considered for further modeling or production use.
-
 Dataset Used: Parkinson's Disease Classification Data Set
 
 Dataset ML Model: Binary classification with numerical attributes
