@@ -24,7 +24,7 @@ In this iteration, we will examine the Hungarian dataset and create a machine le
 
 ANALYSIS: The baseline performance of the machine learning algorithms achieved an average accuracy of 79.33%. Two algorithms (Logistic Regression and Gradient Boosting) achieved the top accuracy metrics after the first round of modeling. After a series of tuning trials, Gradient Boosting turned in the top overall result and achieved an accuracy metric of 82.13%. By using the optimized parameters, the Gradient Boosting algorithm processed the testing dataset with an accuracy of 82.76%, which was even better than the prediction accuracy gained from the training data.
 
-CONCLUSION: For the Cleveland dataset, the Gradient Boosting algorithm achieved the best overall results using the training and testing datasets. For this dataset, Gradient Boosting could be considered for further modeling or production use.
+CONCLUSION: For the Hungarian dataset, the Gradient Boosting algorithm achieved the best overall results using the training and testing datasets. For this dataset, Gradient Boosting could be considered for further modeling or production use.
 
 Dataset Used: Heart Disease Data Set
 
