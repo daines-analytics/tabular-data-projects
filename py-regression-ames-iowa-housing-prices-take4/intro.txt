@@ -1,0 +1,15 @@
+SUMMARY: The purpose of this project is to construct prediction model using various machine learning algorithms and to document the end-to-end steps using a template. The House Prices competition dataset is a regression situation where we are trying to predict the value of a continuous variable.
+
+INTRODUCTION: Ask a home buyer to describe their dream house, and they probably won't begin with the height of the basement ceiling or the proximity to an east-west railroad. But this playground competition's dataset proves that much more influences price negotiations than the number of bedrooms or a white-picket fence. With 79 explanatory variables describing (almost) every aspect of residential homes in Ames, Iowa, this competition challenges you to predict the final price of each home.
+
+ANALYSIS: The baseline performance of the machine learning algorithms achieved an average RMSE of 5.015. Two algorithms (Random Forest and Stochastic Gradient Boosting) achieved the top RMSE metrics after the first round of modeling. After a series of tuning trials, Stochastic Gradient Boosting turned in the top overall result and achieved an RMSE metric of 3.618. By using the optimized parameters, the Stochastic Gradient Boosting algorithm processed the testing dataset with a RMSE of 2.930, which was even better than the training data.
+
+CONCLUSION: For this iteration, the Stochastic Gradient Boosting algorithm achieved the best overall results using the training and testing datasets. For this dataset, Stochastic Gradient Boosting should be considered for further modeling or production use.
+
+Dataset Used: Kaggle Competition - House Prices: Advanced Regression Techniques
+
+Dataset ML Model: Regression with numerical and categorical attributes
+
+Dataset Reference: https://www.kaggle.com/c/house-prices-advanced-regression-techniques
+
+One potential source of performance benchmarks: https://www.kaggle.com/c/house-prices-advanced-regression-techniques
