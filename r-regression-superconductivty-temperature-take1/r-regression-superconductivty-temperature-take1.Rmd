@@ -20,7 +20,7 @@ INTRODUCTION: The research team wishes to create a statistical model for predict
 
 In this iteration, we will establish the baseline mean squared error for comparison with the future rounds of modeling.
 
-ANALYSIS: The baseline performance of the machine learning algorithms achieved an average RMSE of 16.32. Two algorithms (Random Forest and Gradient Boosting) achieved the top RMSE metrics after the first round of modeling. After a series of tuning trials, Random Forest turned in the best overall result and achieved an RMSE metric of 9.69. By using the optimized parameters, the Random Forest algorithm processed the test dataset with an RMSE of 9.39, which was even better than the prediction from the training data.
+ANALYSIS: The baseline performance of the machine learning algorithms achieved an average RMSE of 16.33. Two algorithms (Random Forest and Gradient Boosting) achieved the top RMSE metrics after the first round of modeling. After a series of tuning trials, Random Forest turned in the best overall result and achieved an RMSE metric of 9.72. By using the optimized parameters, the Random Forest algorithm processed the test dataset with an RMSE of 9.40, which was even better than the prediction from the training data.
 
 CONCLUSION: For this iteration, the Random Forest algorithm achieved the best overall results using the training and testing datasets. For this dataset, Random Forest should be considered for further modeling.
 
@@ -183,7 +183,7 @@ cat("Will attempt to create graphics grid (col x row): ", dispCol, ' by ', dispR
 
 ```{r}
 # Run algorithms using 10-fold cross validation
-control <- trainControl(method="repeatedcv", number=10, repeats=3)
+control <- trainControl(method="repeatedcv", number=10, repeats=1)
 metricTarget <- "RMSE"
 ```
 
@@ -343,6 +343,10 @@ The random number seed is reset before each run to ensure that the evaluation of
 
 ### 4.a) Generate models using linear algorithms
 
+```{r}
+startModeling <- proc.time()
+```
+
 ```{r LR}
 # Linear Regression (Regression)
 if (notifyStatus) email_notify(paste("Linear Regression modeling has begun!",date()))
@@ -444,7 +448,8 @@ results <- resamples(list(LR=fit.lm, RIDGE=fit.ridge, LASSO=fit.lasso, ENET=fit.
 summary(results)
 dotplot(results)
 cat('The average RMSE from all models is:',
-    mean(c(results$values$`LR~RMSE`,results$values$`RIDGE~RMSE`,results$values$`LASSO~RMSE`,results$values$`ENET~RMSE`,results$values$`CART~RMSE`,results$values$`BagCART~RMSE`,results$values$`RF~RMSE`,results$values$`GBM~RMSE`)))
+    mean(c(results$values$`LR~RMSE`,results$values$`RIDGE~RMSE`,results$values$`LASSO~RMSE`,results$values$`ENET~RMSE`,results$values$`CART~RMSE`,results$values$`BagCART~RMSE`,results$values$`RF~RMSE`,results$values$`GBM~RMSE`)),'\n')
+cat('Total training time for all models:',proc.time()-startModeling)
 ```
 
 ## 5. Improve Accuracy or Results
@@ -518,13 +523,13 @@ print(R2(predictions, y_test))
 
 ```{r FINALMODEL}
 startTimeModule <- proc.time()
-library(gbm)
+library(randomForest)
 set.seed(seedNum)
 
 # Combining the training and test datasets to form the original dataset that will be used for training the final model
 xy_complete <- rbind(xy_train, xy_test)
 
-# finalModel <- gbm(targetVar~., xy_complete, n.trees = 200, interaction.depth = 3, shrinkage = 0.1, n.minobsinnode = 10, verbose = FALSE)
+# finalModel <- randomForest(targetVar~., xy_complete, mtry=22)
 # summary(finalModel)
 proc.time()-startTimeModule
 ```
