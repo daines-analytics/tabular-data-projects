@@ -1,7 +1,7 @@
 ---
-title: "Multi-Class Classification Model for [Project Name] Using R version 10"
+title: "Multi-Class Classification Model for [Project Name] Using R version 11"
 author: "David Lowe"
-date: "June 17, 2019"
+date: "August 2, 2019"
 output: 
   html_document: 
     toc: yes
@@ -14,11 +14,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Template Credit: Adapted from a template made available by Dr. Jason Brownlee of Machine Learning Mastery. [http://machinelearningmastery.com/]
 
-SUMMARY: [The purpose of this project is to construct a prediction model using various machine learning algorithms and to document the end-to-end steps using a template. The [Dataset Name] is a multi-class classification situation where we are trying to predict one of the several possible outcomes.]
+SUMMARY: [The purpose of this project is to construct a predictive model using various machine learning algorithms and to document the end-to-end steps using a template. The [Dataset Name] is a multi-class classification situation where we are trying to predict one of the several possible outcomes.]
 
 INTRODUCTION: [Sample Paragraph - The dataset involves predicting, from USA Forensic Science Service, six types of glass; defined in terms of their oxide content (i.e. Na, Fe, K, etc). The study of classification of types of glass was also partly motivated by criminological investigation. At the scene of the crime, the glass left can be used as evidence...if it is correctly identified!]
 
-ANALYSIS: [Sample Paragraph - The baseline performance of the machine learning algorithms achieved an average accuracy of 71.65%. Two algorithms (Random Forest and Gradient Boosting) achieved the top accuracy metrics after the first round of modeling. After a series of tuning trials, Random Forest turned in the top overall result and achieved an accuracy metric of 80.47%. After applying the optimized parameters, the Random Forest algorithm processed the testing dataset with an accuracy of 78.69%, which was slightly below the prediction accuracy gained from the training data.]
+ANALYSIS: [Sample Paragraph - The baseline performance of the machine learning algorithms achieved an average accuracy of 69.75%. Two algorithms (Random Forest and Gradient Boosting) achieved the top accuracy metrics after the first round of modeling. After a series of tuning trials, Random Forest turned in the top overall result and achieved an accuracy metric of 77.66%. After applying the optimized parameters, the Random Forest algorithm processed the testing dataset with an accuracy of 84.62%, which was even better than the prediction from the training data.]
 
 CONCLUSION: [Sample Paragraph - For this iteration, the Random Forest algorithm achieved the best overall training and validation results. For this dataset, Random Forest could be considered for further modeling.]
 
@@ -39,16 +39,16 @@ The project aims to touch on the following areas:
 
 Any predictive modeling machine learning project genrally can be broken down into about six major tasks:
 
-1. Prepare Problem
+1. Prepare Environment
 2. Summarize Data
 3. Prepare Data
 4. Model and Evaluate Algorithms
 5. Improve Accuracy or Results
 6. Finalize Model and Present Results
 
-## 1. Prepare Problem
+## 1. Prepare Environment
 
-### 1.a) Load libraries
+### 1.a) Load libraries and packages
 
 ```{r}
 startTimeScript <- proc.time()
@@ -59,15 +59,26 @@ library(Hmisc)
 library(mailR)
 library(ROCR)
 library(stringr)
-
-# Create one random seed number for reproducible results
-seedNum <- 888
-set.seed(seedNum)
 ```
 
-### 1.b) Set up the email notification function
+### 1.b) Set up the controlling parameters and functions
 
 ```{r}
+# Create the random seed number for reproducible results
+seedNum <- 888
+
+# Set up the notifyStatus flag to stop sending progress emails (setting to TRUE will send status emails!)
+notifyStatus <- FALSE
+```
+
+```{r}
+# Run algorithms using 10-fold cross validation
+control <- trainControl(method="repeatedcv", number=10, repeats=1)
+metricTarget <- "Accuracy"
+```
+
+```{r}
+# Set up the email notification function
 email_notify <- function(msg=""){
   sender <- Sys.getenv("MAIL_SENDER")
   receiver <- Sys.getenv("MAIL_RECEIVER")
@@ -87,12 +98,7 @@ email_notify <- function(msg=""){
 ```
 
 ```{r}
-# Set up the muteEmail flag to stop sending progress emails (setting FALSE will send emails!)
-muteEmail <- FALSE
-```
-
-```{r}
-if (!muteEmail) email_notify(paste("Library and Data Loading has begun!",date()))
+if (notifyStatus) email_notify(paste("Library and Data Loading has begun!",date()))
 ```
 
 ### 1.c) Load dataset
@@ -114,28 +120,28 @@ if (!file.exists(dest_file)) {
 
 inputFile <- dest_file
 colNames <- c('Id','RI','Na','Mg','Al','Si','K','Ca','Ba','Fe','Glass')
-xy_original <- read.csv(inputFile, sep=',', header=FALSE, col.names = colNames)
-xy_original['Id'] <- NULL
-xy_original$Glass <- as.factor(xy_original$Glass)
+Xy_original <- read.csv(inputFile, sep=',', header=FALSE, col.names = colNames)
+Xy_original['Id'] <- NULL
+Xy_original$Glass <- as.factor(Xy_original$Glass)
 
 # Different ways of reading and processing the input dataset. Saving these for future references.
-#x_train <- read.fwf("X_train.txt", widths = widthVector, col.names = colNames)
+#X_train <- read.fwf("X_train.txt", widths = widthVector, col.names = colNames)
 #y_train <- read.csv("y_train.txt", header = FALSE, col.names = c("targetVar"))
 #y_train$targetVar <- as.factor(y_train$targetVar)
-#xy_train <- cbind(x_train, y_train)
+#Xy_train <- cbind(X_train, y_train)
 ```
 
 ```{r}
 # Take a peek at the dataframe after the import
-head(xy_original)
+head(Xy_original)
 ```
 
 ```{r}
-sapply(xy_original, class)
+sapply(Xy_original, class)
 ```
 
 ```{r}
-sapply(xy_original, function(x) sum(is.na(x)))
+sapply(Xy_original, function(x) sum(is.na(x)))
 ```
 
 ### 1.d) Data Cleaning
@@ -145,40 +151,40 @@ sapply(xy_original, function(x) sum(is.na(x)))
 # Sample code for performing basic data cleaning tasks
 
 # Dropping features
-# xy_original$column_name <- NULL
+# Xy_original$column_name <- NULL
 
 # Mark missing values
 # invalid <- 0
-# xy_original$column_name[xy_original$column_name==invalid] <- NA
+# Xy_original$column_name[Xy_original$column_name==invalid] <- NA
 
 # Impute missing values
-# column_median <- median(xy_original$column_name, na.rm = TRUE)
-# xy_original$column_name[xy_original$column_name==0] <- column_median
-# xy_original$column_name <- with(xy_original, impute(column_name, cholumn_median))
+# column_median <- median(Xy_original$column_name, na.rm = TRUE)
+# Xy_original$column_name[Xy_original$column_name==0] <- column_median
+# Xy_original$column_name <- with(Xy_original, impute(column_name, cholumn_median))
 
 # Convert columns from one data type to another
-# xy_original$column_name <- as.integer(xy_original$column_name)
-# xy_original$column_name <- as.factor(xy_original$column_name)
+# Xy_original$column_name <- as.integer(Xy_original$column_name)
+# Xy_original$column_name <- as.factor(Xy_original$column_name)
 ```
 
 ```{r}
 # Take a peek at the dataframe after the cleaning
-head(xy_original)
+head(Xy_original)
 ```
 
 ```{r}
-sapply(xy_original, class)
+sapply(Xy_original, class)
 ```
 
 ```{r}
-sapply(xy_original, function(x) sum(is.na(x)))
+sapply(Xy_original, function(x) sum(is.na(x)))
 ```
 
-### 1.e) Splitting Data into Training and Testing Sets
+### 1.e) Splitting Data into Training and Test Sets
 
 ```{r}
 # Use variable totCol to hold the number of columns in the dataframe
-totCol <- ncol(xy_original)
+totCol <- ncol(Xy_original)
 
 # Set up variable totAttr for the total number of attribute columns
 totAttr <- totCol-1
@@ -191,32 +197,30 @@ totAttr <- totCol-1
 targetCol <- totCol
 
 # Standardize the class column to the name of targetVar if applicable
-colnames(xy_original)[targetCol] <- "targetVar"
+colnames(Xy_original)[targetCol] <- "targetVar"
 ```
 
 ```{r}
-# We create training datasets (xy_train, x_train, y_train) for various visualization and cleaning/transformation operations.
-# We create testing datasets (xy_test, y_test) for various visualization and cleaning/transformation operations.
+# Create various sub-datasets for visualization and cleaning/transformation operations.
 set.seed(seedNum)
 
-# Create a list of the rows in the original dataset we can use for training
-# Use 70% of the data to train the models and the remaining for testing/validation
-training_index <- createDataPartition(xy_original$targetVar, p=0.70, list=FALSE)
-xy_train <- xy_original[training_index,]
-xy_test <- xy_original[-training_index,]
+# Use 75% of the data to train the models and the remaining for testing/validation
+training_index <- createDataPartition(Xy_original$targetVar, p=0.75, list=FALSE)
+Xy_train <- Xy_original[training_index,]
+Xy_test <- Xy_original[-training_index,]
 
 if (targetCol==1) {
-x_train <- xy_train[,(targetCol+1):totCol]
-y_train <- xy_train[,targetCol]
-y_test <- xy_test[,targetCol]
+  X_train <- Xy_train[,(targetCol+1):totCol]
+  y_train <- Xy_train[,targetCol]
+  y_test <- Xy_test[,targetCol]
 } else {
-x_train <- xy_train[,1:(totAttr)]
-y_train <- xy_train[,totCol]
-y_test <- xy_test[,totCol]
+  X_train <- Xy_train[,1:(totAttr)]
+  y_train <- Xy_train[,totCol]
+  y_test <- Xy_test[,totCol]
 }
 ```
 
-### 1.f) Set up the key parameters to be used in the script
+### 1.f) Set up the parameters for data visualization
 
 ```{r}
 # Set up the number of row and columns for visualization display. dispRow * dispCol should be >= totAttr
@@ -230,55 +234,43 @@ cat("Will attempt to create graphics grid (col x row): ", dispCol, ' by ', dispR
 ```
 
 ```{r}
-# Run algorithms using 10-fold cross validation
-control <- trainControl(method="repeatedcv", number=10, repeats=1)
-metricTarget <- "Accuracy"
-```
-
-```{r}
-if (!muteEmail) email_notify(paste("Library and Data Loading completed!",date()))
+if (notifyStatus) email_notify(paste("Library and Data Loading completed!",date()))
 ```
 
 ## 2. Summarize Data
 To gain a better understanding of the data that we have on-hand, we will leverage a number of descriptive statistics and data visualization techniques. The plan is to use the results to consider new questions, review assumptions, and validate hypotheses that we can investigate later with specialized models.
 
 ```{r}
-if (!muteEmail) email_notify(paste("Data Summarization and Visualization has begun!",date()))
+if (notifyStatus) email_notify(paste("Data Summarization and Visualization has begun!",date()))
 ```
 
 ### 2.a) Descriptive statistics
 
-#### 2.a.i) Peek at the data itself.
+#### 2.a.i) Peek at the data itself
 
 ```{r}
-head(xy_train)
+head(Xy_train)
 ```
 
-#### 2.a.ii) Dimensions of the dataset.
+#### 2.a.ii) Dimensions of the dataset
 
 ```{r}
-dim(xy_train)
+dim(Xy_train)
 ```
 
-#### 2.a.iii) Types of the attributes.
+#### 2.a.iii) Types of the attribute
 
 ```{r}
-sapply(xy_train, class)
+sapply(Xy_train, class)
 ```
 
-#### 2.a.iv) Statistical summary of all attributes.
+#### 2.a.iv) Statistical summary of the attributes
 
 ```{r}
-summary(xy_train)
+summary(Xy_train)
 ```
 
-#### 2.a.v) Count missing values.
-
-```{r}
-sapply(xy_train, function(x) sum(is.na(x)))
-```
-
-#### 2.a.vi) Summarize the levels of the class attribute.
+#### 2.a.v) Summarize the levels of the class attribute
 
 ```{r}
 cbind(freq=table(y_train), percentage=prop.table(table(y_train))*100)
@@ -286,13 +278,11 @@ cbind(freq=table(y_train), percentage=prop.table(table(y_train))*100)
 
 ### 2.b) Data visualizations
 
-#### 2.b.i) Univariate plots to better understand each attribute.
-
 ```{r}
 # Boxplots for each attribute
 # par(mfrow=c(dispRow,dispCol))
 for(i in 1:totAttr) {
-	boxplot(x_train[,i], main=names(x_train)[i])
+	boxplot(X_train[,i], main=names(X_train)[i])
 }
 ```
 
@@ -300,7 +290,7 @@ for(i in 1:totAttr) {
 # Histograms each attribute
 # par(mfrow=c(dispRow,dispCol))
 for(i in 1:totAttr) {
-	hist(x_train[,i], main=names(x_train)[i])
+	hist(X_train[,i], main=names(X_train)[i])
 }
 ```
 
@@ -308,36 +298,18 @@ for(i in 1:totAttr) {
 # Density plot for each attribute
 # par(mfrow=c(dispRow,dispCol))
 for(i in 1:totAttr) {
-	plot(density(x_train[,i]), main=names(x_train)[i])
+	plot(density(X_train[,i]), main=names(X_train)[i])
 }
 ```
 
-#### 2.b.ii) Multivariate plots to better understand the relationships between attributes
-
 ```{r}
-# Scatterplot matrix colored by class
-pairs(targetVar~., data=xy_train, col=xy_train$targetVar)
-```
-
-```{r}
-# Box and whisker plots for each attribute by class
-scales <- list(x=list(relation="free"), y=list(relation="free"))
-featurePlot(x=x_train, y=y_train, plot="box", scales=scales)
-```
-
-```{r}
-# Density plots for each attribute by class value
-featurePlot(x=x_train, y=y_train, plot="density", scales=scales)
-```
-
-```{r}
-# Correlation plot
-correlations <- cor(x_train)
+# Correlation matrix
+correlations <- cor(X_train)
 corrplot(correlations, method="circle")
 ```
 
 ```{r}
-if (!muteEmail) email_notify(paste("Data Summarization and Visualization completed!",date()))
+if (notifyStatus) email_notify(paste("Data Summarization and Visualization completed!",date()))
 ```
 
 ## 3. Prepare Data
@@ -347,33 +319,57 @@ Some dataset may require additional preparation activities that will best expose
 * Data transforms where attributes are scaled or redistributed in order to best expose the structure of the problem later to learning algorithms.
 
 ```{r}
-if (!muteEmail) email_notify(paste("Data Cleaning and Transformation has begun!",date()))
+if (notifyStatus) email_notify(paste("Data Cleaning and Transformation has begun!",date()))
 ```
 
-### 3.a) Feature Selection
+### 3.a) Data Transforms
 
 ```{r}
-# Not applicable for this iteration of the project.
+# Not applicable for this iteration of the project
+# Sample code for performing SMOTE transformation on the training data
+
+# set.seed(seedNum)
+# Xy_train <- SMOTE(targetVar ~., data=Xy_train, perc.over=200, perc.under=300)
+# totCol <- ncol(Xy_train)
+# y_train <- Xy_train[,totCol]
+# cbind(freq=table(y_train), percentage=prop.table(table(y_train))*100)
+```
+
+### 3.b) Feature Selection
+
+```{r}
+# Not applicable for this iteration of the project
+# Sample Code for finding collinear features (Block #1 of 2)
+
 # Using the correlations calculated previously, we try to find attributes that are highly correlated.
 # highlyCorrelated <- findCorrelation(correlations, cutoff=0.85)
 # print(highlyCorrelated)
 # cat('Number of attributes found to be highly correlated:',length(highlyCorrelated))
-
-# Removing the highly correlated attributes from the training and validation dataframes
-# xy_train <- xy_train[, -highlyCorrelated]
-# xy_test <- xy_test[, -highlyCorrelated]
 ```
 
 ```{r}
-# Not applicable for this iteration of the project.
-# Sample code for performing feature selection by ranking the attributes' importance.
+# Sample Code for finding collinear features (Block #2 of 2)
+
+# Removing the highly correlated attributes from the training and validation dataframes
+# Xy_train <- Xy_train[, -highlyCorrelated]
+# Xy_test <- Xy_test[, -highlyCorrelated]
+```
+
+```{r}
+# Not applicable for this iteration of the project
+# Sample code for performing Attribute Importance Ranking (Block #1 of 3)
+
 # startTimeModule <- proc.time()
 # set.seed(seedNum)
 # library(gbm)
-# model_fs <- train(targetVar~., data=xy_train, method="gbm", preProcess="scale", trControl=control, verbose=F)
+# model_fs <- train(targetVar~., data=Xy_train, method="gbm", preProcess="scale", trControl=control, verbose=F)
 # rankedImportance <- varImp(model_fs, scale=FALSE)
 # print(rankedImportance)
 # plot(rankedImportance)
+```
+
+```{r}
+# Sample code for performing Attribute Importance Ranking (Block #2 of 3)
 
 # Set the importance threshold and calculate the list of attributes that don't contribute to the importance threshold
 # maxThreshold <- 0.99
@@ -395,56 +391,53 @@ if (!muteEmail) email_notify(paste("Data Cleaning and Transformation has begun!"
 # lowAttributes <- rownames(lowImportance)
 # cat('Number of attributes contributed to the importance threshold:',i,"\n")
 # cat('Number of attributes found to be of low importance:',length(lowAttributes))
-
-# Removing the unselected attributes from the training and validation dataframes
-# xy_train <- xy_train[, !(names(xy_train) %in% lowAttributes)]
-# xy_test <- xy_test[, !(names(xy_test) %in% lowAttributes)]
 ```
 
 ```{r}
-# Not applicable for this iteration of the project.
-# Sample code for perfoming feature selection using the Recursive Feature Elimination (RFE) technique
+# Sample code for performing Attribute Importance Ranking (Block #3 of 3)
+
+# Removing the unselected attributes from the training and validation dataframes
+# Xy_train <- Xy_train[, !(names(Xy_train) %in% lowAttributes)]
+# Xy_test <- Xy_test[, !(names(Xy_test) %in% lowAttributes)]
+```
+
+```{r}
+# Not applicable for this iteration of the project
+# Sample code for performing Recursive Feature Elimination (Block #1 of 2)
+
 # startTimeModule <- proc.time()
 # set.seed(seedNum)
 # rfeCTRL <- rfeControl(functions=rfFuncs, method="cv", number=10)
-# rfeResults <- rfe(xy_train[,1:totAttr], xy_train[,totCol], sizes=c(30:55), rfeControl=rfeCTRL)
+# rfeResults <- rfe(Xy_train[,1:totAttr], Xy_train[,totCol], sizes=c(30:55), rfeControl=rfeCTRL)
 # print(rfeResults)
 # rfeAttributes <- predictors(rfeResults)
 # cat('Number of attributes identified from the RFE algorithm:',length(rfeAttributes))
 # print(rfeAttributes)
 # plot(rfeResults, type=c("g", "o"))
+```
+
+```{r}
+# Sample code for performing Recursive Feature Elimination (Block #2 of 3)
 
 # Removing the unselected attributes from the training and validation dataframes
 # rfeAttributes <- c(rfeAttributes,"targetVar")
-# xy_train <- xy_train[, (names(xy_train) %in% rfeAttributes)]
-# xy_test <- xy_test[, (names(xy_test) %in% rfeAttributes)]
+# Xy_train <- Xy_train[, (names(Xy_train) %in% rfeAttributes)]
+# Xy_test <- Xy_test[, (names(Xy_test) %in% rfeAttributes)]
 ```
 
-### 3.b) Data Transforms
+### 3.c) Display the Final Datasets for Model-Building
 
 ```{r}
-# Not applicable for this iteration of the project.
-# Sample code for performing SMOTE transformation to combat the unbalanced data
-# set.seed(seedNum)
-# xy_train <- SMOTE(targetVar ~., data=xy_train, perc.over=200, perc.under=300)
-# totCol <- ncol(xy_train)
-# y_train <- xy_train[,totCol]
-# cbind(freq=table(y_train), percentage=prop.table(table(y_train))*100)
-```
-
-### 3.c) Display the Final Dataset for Model-Building
-
-```{r}
-dim(xy_train)
-dim(xy_test)
+# We finalize the training and testing datasets for the modeling activities
+dim(Xy_train)
+dim(Xy_test)
 ```
 
 ```{r}
-sapply(xy_train, class)
+if (notifyStatus) email_notify(paste("Data Cleaning and Transformation completed!",date()))
 ```
 
 ```{r}
-if (!muteEmail) email_notify(paste("Data Cleaning and Transformation completed!",date()))
 proc.time()-startTimeScript
 ```
 
@@ -469,26 +462,26 @@ The random number seed is reset before each run to ensure that the evaluation of
 
 ```{r LDA}
 # Linear Discriminant Analysis (Classification)
-if (!muteEmail) email_notify(paste("Linear Discriminant Analysis modeling has begun!",date()))
+if (notifyStatus) email_notify(paste("Linear Discriminant Analysis modeling has begun!",date()))
 startTimeModule <- proc.time()
 set.seed(seedNum)
-fit.lda <- train(targetVar~., data=xy_train, method="lda", metric=metricTarget, trControl=control)
+fit.lda <- train(targetVar~., data=Xy_train, method="lda", metric=metricTarget, trControl=control)
 print(fit.lda)
 proc.time()-startTimeModule
-if (!muteEmail) email_notify(paste("Linear Discriminant Analysis modeling completed!",date()))
+if (notifyStatus) email_notify(paste("Linear Discriminant Analysis modeling completed!",date()))
 ```
 
 ### 4.b) Generate models using nonlinear algorithms
 
 ```{r CART}
 # Decision Tree - CART (Regression/Classification)
-if (!muteEmail) email_notify(paste("Decision Tree modeling has begun!",date()))
+if (notifyStatus) email_notify(paste("Decision Tree modeling has begun!",date()))
 startTimeModule <- proc.time()
 set.seed(seedNum)
-fit.cart <- train(targetVar~., data=xy_train, method="rpart", metric=metricTarget, trControl=control)
+fit.cart <- train(targetVar~., data=Xy_train, method="rpart", metric=metricTarget, trControl=control)
 print(fit.cart)
 proc.time()-startTimeModule
-if (!muteEmail) email_notify(paste("Decision Tree modeling completed!",date()))
+if (notifyStatus) email_notify(paste("Decision Tree modeling completed!",date()))
 ```
 
 ### 4.c) Generate models using ensemble algorithms
@@ -496,36 +489,36 @@ In this section, we will explore the use and tuning of ensemble algorithms to se
 
 ```{r BAGCART}
 # Bagged CART (Regression/Classification)
-if (!muteEmail) email_notify(paste("Bagged CART modeling has begun!",date()))
+if (notifyStatus) email_notify(paste("Bagged CART modeling has begun!",date()))
 startTimeModule <- proc.time()
 set.seed(seedNum)
-fit.bagcart <- train(targetVar~., data=xy_train, method="treebag", metric=metricTarget, trControl=control)
+fit.bagcart <- train(targetVar~., data=Xy_train, method="treebag", metric=metricTarget, trControl=control)
 print(fit.bagcart)
 proc.time()-startTimeModule
-if (!muteEmail) email_notify(paste("Bagged CART modeling completed!",date()))
+if (notifyStatus) email_notify(paste("Bagged CART modeling completed!",date()))
 ```
 
 ```{r RF}
 # Random Forest (Regression/Classification)
-if (!muteEmail) email_notify(paste("Random Forest modeling has begun!",date()))
+if (notifyStatus) email_notify(paste("Random Forest modeling has begun!",date()))
 startTimeModule <- proc.time()
 set.seed(seedNum)
-fit.rf <- train(targetVar~., data=xy_train, method="rf", metric=metricTarget, trControl=control)
+fit.rf <- train(targetVar~., data=Xy_train, method="rf", metric=metricTarget, trControl=control)
 print(fit.rf)
 proc.time()-startTimeModule
-if (!muteEmail) email_notify(paste("Random Forest modeling completed!",date()))
+if (notifyStatus) email_notify(paste("Random Forest modeling completed!",date()))
 ```
 
 ```{r GBM}
 # Gradient Boosting (Regression/Classification)
-if (!muteEmail) email_notify(paste("Gradient Boosting modeling has begun!",date()))
+if (notifyStatus) email_notify(paste("Gradient Boosting modeling has begun!",date()))
 startTimeModule <- proc.time()
 set.seed(seedNum)
-fit.gbm <- train(targetVar~., data=xy_train, method="xgbTree", metric=metricTarget, trControl=control, verbose=F)
-# fit.gbm <- train(targetVar~., data=xy_train, method="gbm", metric=metricTarget, trControl=control, verbose=F)
+# fit.gbm <- train(targetVar~., data=Xy_train, method="gbm", metric=metricTarget, trControl=control, verbose=F)
+fit.gbm <- train(targetVar~., data=Xy_train, method="xgbTree", metric=metricTarget, trControl=control, verbose=F)
 print(fit.gbm)
 proc.time()-startTimeModule
-if (!muteEmail) email_notify(paste("Gradient Boosting modeling completed!",date()))
+if (notifyStatus) email_notify(paste("Gradient Boosting modeling completed!",date()))
 ```
 
 ### 4.d) Compare baseline algorithms
@@ -548,34 +541,34 @@ Finally, we will tune the best-performing algorithms from each group further and
 
 ```{r FINAL1}
 # Tuning algorithm #1 - Random Forest
-if (!muteEmail) email_notify(paste("Algorithm #1 tuning has begun!",date()))
+if (notifyStatus) email_notify(paste("Algorithm #1 tuning has begun!",date()))
 startTimeModule <- proc.time()
 set.seed(seedNum)
 grid <- expand.grid(mtry = c(1,3,5,7,9))
-fit.final1 <- train(targetVar~., data=xy_train, method="rf", metric=metricTarget, tuneGrid=grid, trControl=control)
+fit.final1 <- train(targetVar~., data=Xy_train, method="rf", metric=metricTarget, tuneGrid=grid, trControl=control)
 plot(fit.final1)
 print(fit.final1)
 proc.time()-startTimeModule
-if (!muteEmail) email_notify(paste("Algorithm #1 tuning completed!",date()))
+if (notifyStatus) email_notify(paste("Algorithm #1 tuning completed!",date()))
 ```
 
 ```{r FINAL2}
 # Tuning algorithm #2 - Gradient Boosting
-if (!muteEmail) email_notify(paste("Algorithm #2 tuning has begun!",date()))
+if (notifyStatus) email_notify(paste("Algorithm #2 tuning has begun!",date()))
 startTimeModule <- proc.time()
 set.seed(seedNum)
 grid <- expand.grid(nrounds=c(50,100,200,300), max_depth=3, eta=0.3, gamma=0, colsample_bytree=0.8, min_child_weight=1, subsample=0.75)
-fit.final2 <- train(targetVar~., data=xy_train, method="xgbTree", metric=metricTarget, tuneGrid=grid, trControl=control, verbose=F)
+fit.final2 <- train(targetVar~., data=Xy_train, method="xgbTree", metric=metricTarget, tuneGrid=grid, trControl=control, verbose=F)
 plot(fit.final2)
 print(fit.final2)
 proc.time()-startTimeModule
-if (!muteEmail) email_notify(paste("Algorithm #2 tuning completed!",date()))
+if (notifyStatus) email_notify(paste("Algorithm #2 tuning completed!",date()))
 ```
 
 ### 5.d) Compare Algorithms After Tuning
 
 ```{r POST_TUNING}
-results <- resamples(list(RF=fit.final1, XGB=fit.final2))
+results <- resamples(list(RF=fit.final1, GBM=fit.final2))
 summary(results)
 dotplot(results)
 ```
@@ -588,13 +581,18 @@ Once we have narrow down to a model that we believe can make accurate prediction
 * Saving an optimal model to file for later use.
 
 ```{r}
-if (!muteEmail) email_notify(paste("Model Validation and Final Model Creation has begun!",date()))
+if (notifyStatus) email_notify(paste("Model Validation and Final Model Creation has begun!",date()))
 ```
 
 ### 6.a) Predictions on validation dataset
 
-```{r PREDICT}
-predictions <- predict(fit.final1, newdata=xy_test)
+```{r PREDICT1}
+predictions <- predict(fit.final1, newdata=Xy_test)
+confusionMatrix(predictions, y_test)
+```
+
+```{r PREDICT2}
+predictions <- predict(fit.final2, newdata=Xy_test)
 confusionMatrix(predictions, y_test)
 ```
 
@@ -602,13 +600,13 @@ confusionMatrix(predictions, y_test)
 
 ```{r}
 startTimeModule <- proc.time()
-library(randomForest)
 set.seed(seedNum)
+library(randomForest)
 
-# Combining the training and test datasets to form the original dataset that will be used for training the final model
-xy_complete <- rbind(xy_train, xy_test)
+# Combining datasets to form a complete dataset that will be used to train the final model
+Xy_complete <- rbind(Xy_train, Xy_test)
 
-finalModel <- randomForest(targetVar~., xy_complete, mtry=3, na.action=na.omit)
+finalModel <- randomForest(targetVar~., Xy_complete, mtry=3, na.action=na.omit)
 summary(finalModel)
 proc.time()-startTimeModule
 ```
@@ -620,7 +618,7 @@ proc.time()-startTimeModule
 ```
 
 ```{r}
-if (!muteEmail) email_notify(paste("Model Validation and Final Model Creation Completed!",date()))
+if (notifyStatus) email_notify(paste("Model Validation and Final Model Creation Completed!",date()))
 ```
 
 ```{r}
