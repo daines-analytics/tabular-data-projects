@@ -1,0 +1,593 @@
+---
+title: "Multi-Class Classification Model for Forest Cover Type Using R Take 3"
+author: "David Lowe"
+date: "August 12, 2019"
+output: 
+  html_document: 
+    toc: yes
+    self_contained: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Template Credit: Adapted from a template made available by Dr. Jason Brownlee of Machine Learning Mastery. [http://machinelearningmastery.com/]
+
+SUMMARY: The purpose of this project is to construct a predictive model using various machine learning algorithms and to document the end-to-end steps using a template. The Forest Cover Type dataset is a multi-class classification situation where we are trying to predict one of the seven possible outcomes.
+
+INTRODUCTION: This experiment tries to predict forest cover type from cartographic variables only. This study area includes four wilderness areas located in the Roosevelt National Forest of northern Colorado. These areas represent forests with minimal human-caused disturbances, so that existing forest cover types are more a result of ecological processes rather than forest management practices.
+
+The actual forest cover type for a given observation (30 x 30-meter cell) was determined from the US Forest Service (USFS) Region 2 Resource Information System (RIS) data. Independent variables were derived from data originally obtained from the US Geological Survey (USGS) and USFS data. Data is in raw form (not scaled) and contains binary (0 or 1) columns of data for qualitative independent variables (wilderness areas and soil types).
+
+In iteration Take1, we established the baseline accuracy for comparison with future rounds of modeling.
+
+In iteration Take2, we examined the feature selection technique of attribute importance ranking by using the Gradient Boosting algorithm. By selecting the most important attributes, we decreased the modeling time and still maintained a similar level of accuracy when compared to the baseline model.
+
+In iteration Take3, we will examine the feature selection technique of recursive feature elimination (RFE) by using the Random Forest algorithm. By selecting no more than 30 attributes, we hope to maintain a similar level of accuracy when compared to the baseline model.
+
+ANALYSIS: From iteration Take1, the baseline performance of the machine learning algorithms achieved an average accuracy of 78.04%. Two algorithms (Random Forest and Gradient Boosting) achieved the top accuracy metrics after the first round of modeling. After a series of tuning trials, Random Forest turned in the top overall result and achieved an accuracy metric of 85.48%. By using the optimized parameters, the Random Forest algorithm processed the testing dataset with an accuracy of 86.07%, which was even better than the predictions from the training data.
+
+From iteration Take2, the performance of the machine learning algorithms achieved an average accuracy of 74.27%. Random Forest achieved an accuracy metric of 85.47% with the training data and processed the testing dataset with an accuracy of 85.85%, which was even better than the predictions from the training data. At the importance level of 99%, the attribute importance technique eliminated 22 of 54 total attributes. The remaining 32 attributes produced a model that achieved a comparable accuracy compared to the baseline model. The modeling time went from 1 hour 19 minutes down to 58 minutes, a reduction of 36.2%.
+
+From the current iteration, the performance of the machine learning algorithms achieved an average accuracy of 73.25%. Random Forest achieved an accuracy metric of 84.24% with the training data and processed the testing dataset with an accuracy of 84.77%, which was even better than the predictions from the training data. The RFE technique eliminated 42 of 54 total attributes. The remaining 12 attributes produced a model that achieved a comparable accuracy compared to the baseline model. The modeling time went from 1 hour 19 minutes down to 33 minutes, a reduction of 58.2%.
+
+CONCLUSION: For this iteration, the Random Forest algorithm achieved the best overall results using the training and testing datasets. For this dataset, Random Forest should be considered for further modeling.
+
+Dataset Used: Covertype Data Set
+
+Dataset ML Model: Multi-Class classification with numerical attributes
+
+Dataset Reference: https://archive.ics.uci.edu/ml/datasets/Covertype
+
+One source of potential performance benchmarks: https://www.kaggle.com/c/forest-cover-type-prediction/overview
+
+The project aims to touch on the following areas:
+
+1. Document a predictive modeling problem end-to-end.
+2. Explore data cleaning and transformation options
+3. Explore non-ensemble and ensemble algorithms for baseline model performance
+4. Explore algorithm tuning techniques for improving model performance
+
+Any predictive modeling machine learning project genrally can be broken down into about six major tasks:
+
+1. Prepare Problem
+2. Summarize Data
+3. Prepare Data
+4. Model and Evaluate Algorithms
+5. Improve Accuracy or Results
+6. Finalize Model and Present Results
+
+## 1. Prepare Problem
+
+### 1.a) Load libraries
+
+```{r}
+startTimeScript <- proc.time()
+library(caret)
+library(corrplot)
+library(DMwR)
+library(Hmisc)
+library(mailR)
+library(ROCR)
+library(stringr)
+
+# Create one random seed number for reproducible results
+seedNum <- 888
+set.seed(seedNum)
+```
+
+### 1.b) Set up the email notification function
+
+```{r}
+email_notify <- function(msg=""){
+  sender <- Sys.getenv("MAIL_SENDER")
+  receiver <- Sys.getenv("MAIL_RECEIVER")
+  gateway <- Sys.getenv("SMTP_GATEWAY")
+  smtpuser <- Sys.getenv("SMTP_USERNAME")
+  password <- Sys.getenv("SMTP_PASSWORD")
+  sbj_line <- "Notification from R Binary Classification Script"
+  send.mail(
+    from = sender,
+    to = receiver,
+    subject= sbj_line,
+    body = msg,
+    smtp = list(host.name = gateway, port = 587, user.name = smtpuser, passwd = password, ssl = TRUE),
+    authenticate = TRUE,
+    send = TRUE)
+}
+```
+
+```{r}
+# Set up the muteEmail flag to stop sending progress emails (setting FALSE will send emails!)
+notifyStatus <- FALSE
+```
+
+```{r}
+if (notifyStatus) email_notify(paste("Library and Data Loading has begun!",date()))
+```
+
+### 1.c) Load dataset
+
+```{r}
+# Slicing up the document path to get the final destination file name
+dataset_path <- 'https://www.kaggle.com/c/forest-cover-type-prediction/download/train.csv'
+doc_path_list <- str_split(dataset_path, "/")
+dest_file <- doc_path_list[[1]][length(doc_path_list[[1]])]
+
+if (!file.exists(dest_file)) {
+  # Download the document from the website
+  cat("Downloading", dataset_path, "as", dest_file, "\n")
+  download.file(dataset_path, dest_file, mode = "wb")
+  cat(dest_file, "downloaded!\n")
+#  unzip(dest_file)
+#  cat(dest_file, "unpacked!\n")
+}
+
+inputFile <- dest_file
+Xy_original <- read.csv(inputFile, sep=',', header=TRUE, row.names=1)
+Xy_original$Cover_Type <- as.factor(Xy_original$Cover_Type)
+```
+
+```{r}
+# Take a peek at the dataframe after the import
+head(Xy_original)
+```
+
+```{r}
+sapply(Xy_original, class)
+```
+
+```{r}
+sapply(Xy_original, function(x) sum(is.na(x)))
+```
+
+### 1.d) Data Cleaning
+
+```{r}
+# Not applicable for this iteration of the project.
+```
+
+```{r}
+# Take a peek at the dataframe after the cleaning
+head(Xy_original)
+```
+
+```{r}
+sapply(Xy_original, class)
+```
+
+```{r}
+sapply(Xy_original, function(x) sum(is.na(x)))
+```
+
+### 1.e) Splitting Data into Training and Testing Sets
+
+```{r}
+# Use variable totCol to hold the number of columns in the dataframe
+totCol <- ncol(Xy_original)
+
+# Set up variable totAttr for the total number of attribute columns
+totAttr <- totCol-1
+```
+
+```{r}
+# targetCol variable indicates the column location of the target/class variable
+# If the first column, set targetCol to 1. If the last column, set targetCol to totCol
+# if (targetCol <> 1) and (targetCol <> totCol), be aware when slicing up the dataframes for visualization! 
+targetCol <- totCol
+
+# Standardize the class column to the name of targetVar if applicable
+colnames(Xy_original)[targetCol] <- "targetVar"
+```
+
+```{r}
+# We create training datasets (Xy_train, X_train, y_train) for various visualization and cleaning/transformation operations.
+# We create testing datasets (Xy_test, y_test) for various visualization and cleaning/transformation operations.
+set.seed(seedNum)
+
+# Create a list of the rows in the original dataset we can use for training
+# Use 70% of the data to train the models and the remaining for testing/validation
+training_index <- createDataPartition(Xy_original$targetVar, p=0.70, list=FALSE)
+Xy_train <- Xy_original[training_index,]
+Xy_test <- Xy_original[-training_index,]
+
+if (targetCol==1) {
+X_train <- Xy_train[,(targetCol+1):totCol]
+y_train <- Xy_train[,targetCol]
+y_test <- Xy_test[,targetCol]
+} else {
+X_train <- Xy_train[,1:(totAttr)]
+y_train <- Xy_train[,totCol]
+y_test <- Xy_test[,totCol]
+}
+```
+
+### 1.f) Set up the key parameters to be used in the script
+
+```{r}
+# Set up the number of row and columns for visualization display. dispRow * dispCol should be >= totAttr
+dispCol <- 3
+if (totAttr%%dispCol == 0) {
+dispRow <- totAttr%/%dispCol
+} else {
+dispRow <- (totAttr%/%dispCol) + 1
+}
+cat("Will attempt to create graphics grid (col x row): ", dispCol, ' by ', dispRow)
+```
+
+```{r}
+# Run algorithms using 10-fold cross validation
+control <- trainControl(method="repeatedcv", number=10, repeats=1)
+metricTarget <- "Accuracy"
+```
+
+```{r}
+if (notifyStatus) email_notify(paste("Library and Data Loading completed!",date()))
+```
+
+## 2. Summarize Data
+To gain a better understanding of the data that we have on-hand, we will leverage a number of descriptive statistics and data visualization techniques. The plan is to use the results to consider new questions, review assumptions, and validate hypotheses that we can investigate later with specialized models.
+
+```{r}
+if (notifyStatus) email_notify(paste("Data Summarization and Visualization has begun!",date()))
+```
+
+### 2.a) Descriptive statistics
+
+#### 2.a.i) Peek at the data itself.
+
+```{r}
+head(Xy_train)
+```
+
+#### 2.a.ii) Dimensions of the dataset.
+
+```{r}
+dim(Xy_train)
+```
+
+#### 2.a.iii) Types of the attributes.
+
+```{r}
+sapply(Xy_train, class)
+```
+
+#### 2.a.iv) Statistical summary of all attributes.
+
+```{r}
+summary(Xy_train)
+```
+
+#### 2.a.v) Count missing values.
+
+```{r}
+sapply(Xy_train, function(x) sum(is.na(x)))
+```
+
+#### 2.a.vi) Summarize the levels of the class attribute.
+
+```{r}
+cbind(freq=table(y_train), percentage=prop.table(table(y_train))*100)
+```
+
+### 2.b) Data visualizations
+
+#### 2.b.i) Univariate plots to better understand each attribute.
+
+```{r}
+# Boxplots for each attribute
+# par(mfrow=c(dispRow,dispCol))
+for(i in 1:totAttr) {
+	boxplot(X_train[,i], main=names(X_train)[i])
+}
+```
+
+```{r}
+# Histograms each attribute
+# par(mfrow=c(dispRow,dispCol))
+for(i in 1:totAttr) {
+	hist(X_train[,i], main=names(X_train)[i])
+}
+```
+
+```{r}
+# Density plot for each attribute
+# par(mfrow=c(dispRow,dispCol))
+for(i in 1:totAttr) {
+	plot(density(X_train[,i]), main=names(X_train)[i])
+}
+```
+
+#### 2.b.ii) Multivariate plots to better understand the relationships between attributes
+
+```{r}
+# Scatterplot matrix colored by class
+# pairs(targetVar~., data=Xy_train, col=Xy_train$targetVar)
+```
+
+```{r}
+# Box and whisker plots for each attribute by class
+# scales <- list(x=list(relation="free"), y=list(relation="free"))
+# featurePlot(x=X_train, y=y_train, plot="box", scales=scales)
+```
+
+```{r}
+# Density plots for each attribute by class value
+# featurePlot(x=X_train, y=y_train, plot="density", scales=scales)
+```
+
+```{r}
+# Correlation plot
+correlations <- cor(X_train)
+corrplot(correlations, method="circle")
+```
+
+```{r}
+if (notifyStatus) email_notify(paste("Data Summarization and Visualization completed!",date()))
+```
+
+## 3. Prepare Data
+Some dataset may require additional preparation activities that will best exposes the structure of the problem and the relationships between the input attributes and the output variable. Some data-prep tasks might include:
+
+* Feature selection where redundant features may be removed.
+* Data transforms where attributes are scaled or redistributed in order to best expose the structure of the problem later to learning algorithms.
+
+```{r}
+if (notifyStatus) email_notify(paste("Data Cleaning and Transformation has begun!",date()))
+```
+
+### 3.a) Data Transforms
+
+```{r}
+# Not applicable for this iteration of the project.
+```
+
+### 3.b) Splitting Data into Training and Testing Sets
+
+```{r}
+# Not applicable for this iteration of the project.
+```
+
+### 3.c) Feature Selection
+
+```{r}
+# Perform the Recursive Feature Elimination (RFE) technique
+startTimeModule <- proc.time()
+set.seed(seedNum)
+X_rfe <- Xy_train[,1:totAttr]
+y_rfe <- Xy_train[,totCol]
+normalization <- preProcess(X_rfe)
+X_rfe <- predict(normalization, X_rfe)
+X_rfe <- as.data.frame(X_rfe)
+rfeCTRL <- rfeControl(functions=rfFuncs, method="cv", number=10, repeats=1, verbose=FALSE, returnResamp="all")
+optimalVars <- 50
+subsets <- c(2:optimalVars)
+rfeProfile <- rfe(X_rfe, y_rfe, sizes=subsets, rfeControl=rfeCTRL)
+print(rfeProfile)
+plot(rfeProfile, type=c("g", "o"))
+```
+
+```{r}
+# Perform the Recursive Feature Elimination (RFE) technique
+numberRFEVars <- length(predictors(rfeProfile))
+if (numberRFEVars <= optimalVars) {
+  rfeAttributes <- predictors(rfeProfile)
+} else {
+  newProfile <- update(rfeProfile, x=X_rfe, y=y_rfe, size=optimalVars)
+  rfeAttributes <- newProfile$bestVar
+}
+cat('Number of attributes selected from the RFE algorithm:',length(rfeAttributes),'\n')
+print(rfeAttributes)
+```
+
+```{r}
+# Removing the unselected attributes from the training and validation dataframes
+rfeAttributes <- c(rfeAttributes,"targetVar")
+Xy_train <- Xy_train[, (names(Xy_train) %in% rfeAttributes)]
+Xy_test <- Xy_test[, (names(Xy_test) %in% rfeAttributes)]
+```
+
+### 3.d) Display the Final Dataset for Model-Building
+
+```{r}
+dim(Xy_train)
+dim(Xy_test)
+```
+
+```{r}
+sapply(Xy_train, class)
+```
+
+```{r}
+if (notifyStatus) email_notify(paste("Data Cleaning and Transformation completed!",date()))
+proc.time()-startTimeScript
+```
+
+## 4. Model and Evaluate Algorithms
+After the data-prep, we next work on finding a workable model by evaluating a subset of machine learning algorithms that are good at exploiting the structure of the training. The typical evaluation tasks include:
+
+* Defining test options such as cross validation and the evaluation metric to use.
+* Spot checking a suite of linear and nonlinear machine learning algorithms.
+* Comparing the estimated accuracy of algorithms.
+
+For this project, we will evaluate one linear, one non-linear, and three ensemble algorithms:
+
+Linear Algorithm: Linear Discriminant Analysis
+
+Non-Linear Algorithm: Decision Trees (CART)
+
+Ensemble Algorithms: Bagged CART, Random Forest, and Gradient Boosting
+
+The random number seed is reset before each run to ensure that the evaluation of each algorithm is performed using the same data splits. It ensures the results are directly comparable.
+
+### 4.a) Generate models using linear algorithms
+
+```{r}
+startModeling <- proc.time()
+```
+
+```{r LDA}
+# Linear Discriminant Analysis (Classification)
+# if (notifyStatus) email_notify(paste("Linear Discriminant Analysis modeling has begun!",date()))
+# startTimeModule <- proc.time()
+# set.seed(seedNum)
+# fit.lda <- train(targetVar~., data=Xy_train, method="lda", metric=metricTarget, trControl=control)
+# print(fit.lda)
+# proc.time()-startTimeModule
+# if (notifyStatus) email_notify(paste("Linear Discriminant Analysis modeling completed!",date()))
+```
+
+### 4.b) Generate models using nonlinear algorithms
+
+```{r CART}
+# Decision Tree - CART (Regression/Classification)
+if (notifyStatus) email_notify(paste("Decision Tree modeling has begun!",date()))
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.cart <- train(targetVar~., data=Xy_train, method="rpart", metric=metricTarget, trControl=control)
+print(fit.cart)
+proc.time()-startTimeModule
+if (notifyStatus) email_notify(paste("Decision Tree modeling completed!",date()))
+```
+
+### 4.c) Generate models using ensemble algorithms
+In this section, we will explore the use and tuning of ensemble algorithms to see whether we can improve the results.
+
+```{r BAGCART}
+# Bagged CART (Regression/Classification)
+if (notifyStatus) email_notify(paste("Bagged CART modeling has begun!",date()))
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.bagcart <- train(targetVar~., data=Xy_train, method="treebag", metric=metricTarget, trControl=control)
+print(fit.bagcart)
+proc.time()-startTimeModule
+if (notifyStatus) email_notify(paste("Bagged CART modeling completed!",date()))
+```
+
+```{r RF}
+# Random Forest (Regression/Classification)
+if (notifyStatus) email_notify(paste("Random Forest modeling has begun!",date()))
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.rf <- train(targetVar~., data=Xy_train, method="rf", metric=metricTarget, trControl=control)
+print(fit.rf)
+proc.time()-startTimeModule
+if (notifyStatus) email_notify(paste("Random Forest modeling completed!",date()))
+```
+
+```{r GBM}
+# Gradient Boosting (Regression/Classification)
+if (notifyStatus) email_notify(paste("Gradient Boosting modeling has begun!",date()))
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.gbm <- train(targetVar~., data=Xy_train, method="xgbTree", metric=metricTarget, trControl=control, verbose=F)
+# fit.gbm <- train(targetVar~., data=Xy_train, method="gbm", metric=metricTarget, trControl=control, verbose=F)
+print(fit.gbm)
+proc.time()-startTimeModule
+if (notifyStatus) email_notify(paste("Gradient Boosting modeling completed!",date()))
+```
+
+### 4.d) Compare baseline algorithms
+
+```{r SPOT_CHECK}
+results <- resamples(list(CART=fit.cart, BDT=fit.bagcart, RF=fit.rf, GBM=fit.gbm))
+summary(results)
+dotplot(results)
+cat('The average accuracy from all models is:',
+    mean(c(results$values$`CART~Accuracy`,results$values$`BDT~Accuracy`,results$values$`RF~Accuracy`,results$values$`GBM~Accuracy`)),'\n')
+cat('Total training time for all models:',proc.time()-startModeling)
+```
+
+## 5. Improve Accuracy or Results
+After we achieve a short list of machine learning algorithms with good level of accuracy, we can leverage ways to improve the accuracy of the models.
+
+Using the three best-perfoming algorithms from the previous section, we will Search for a combination of parameters for each algorithm that yields the best results.
+
+### 5.a) Algorithm Tuning
+Finally, we will tune the best-performing algorithms from each group further and see whether we can get more accuracy out of them.
+
+```{r FINAL1}
+# Tuning algorithm #1 - Bagged CART
+# No tuning parameters available for "treebag" in the caret package
+if (notifyStatus) email_notify(paste("Algorithm #1 tuning has begun!",date()))
+startTimeModule <- proc.time()
+set.seed(seedNum)
+fit.final1 <- fit.bagcart
+print(fit.final1)
+proc.time()-startTimeModule
+if (notifyStatus) email_notify(paste("Algorithm #1 tuning completed!",date()))
+```
+
+```{r FINAL2}
+# Tuning algorithm #2 - Random Forest
+if (notifyStatus) email_notify(paste("Algorithm #2 tuning has begun!",date()))
+startTimeModule <- proc.time()
+set.seed(seedNum)
+grid <- expand.grid(mtry = c(2,5,7,10,12))
+fit.final2 <- train(targetVar~., data=Xy_train, method="rf", metric=metricTarget, tuneGrid=grid, trControl=control)
+plot(fit.final2)
+print(fit.final2)
+proc.time()-startTimeModule
+if (notifyStatus) email_notify(paste("Algorithm #2 tuning completed!",date()))
+```
+
+### 5.d) Compare Algorithms After Tuning
+
+```{r POST_TUNING}
+results <- resamples(list(BDT=fit.final1, RF=fit.final2))
+summary(results)
+dotplot(results)
+```
+
+## 6. Finalize Model and Present Results
+Once we have narrow down to a model that we believe can make accurate predictions on unseen data, we are ready to finalize it. Finalizing a model may involve sub-tasks such as:
+
+* Using an optimal model tuned to make predictions on unseen data.
+* Creating a standalone model using the tuned parameters
+* Saving an optimal model to file for later use.
+
+```{r}
+if (notifyStatus) email_notify(paste("Model Validation and Final Model Creation has begun!",date()))
+```
+
+### 6.a) Predictions on validation dataset
+
+```{r PREDICT1}
+predictions <- predict(fit.final1, newdata=Xy_test)
+confusionMatrix(predictions, y_test)
+```
+
+```{r PREDICT2}
+predictions <- predict(fit.final2, newdata=Xy_test)
+confusionMatrix(predictions, y_test)
+```
+
+### 6.b) Create standalone model on entire training dataset
+
+```{r}
+startTimeModule <- proc.time()
+library(randomForest)
+set.seed(seedNum)
+
+# Combining the training and test datasets to form the original dataset that will be used for training the final model
+xy_complete <- rbind(Xy_train, Xy_test)
+
+# finalModel <- randomForest(targetVar~., xy_complete, mtry=31, na.action=na.omit)
+# summary(finalModel)
+proc.time()-startTimeModule
+```
+
+### 6.c) Save model for later use
+
+```{r}
+#saveRDS(finalModel, "./finalModel_MultiClass.rds")
+```
+
+```{r}
+if (notifyStatus) email_notify(paste("Model Validation and Final Model Creation Completed!",date()))
+```
+
+```{r}
+proc.time()-startTimeScript
+```
