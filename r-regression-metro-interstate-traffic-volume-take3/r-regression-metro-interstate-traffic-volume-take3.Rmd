@@ -30,7 +30,7 @@ From iteration Take2, the baseline performance of the machine learning algorithm
 
 By including the date_time information and related attributes, the machine learning models did a significantly better job in prediction with a much lower RMSE.
 
-In the current iteration, the baseline performance of the machine learning algorithms achieved an average RMSE of 814. Two algorithms (Random Forest and Gradient Boosting) achieved the top RMSE metrics after the first round of modeling. After a series of tuning trials, Gradient Boosting turned in the top overall result and achieved an RMSE metric of 474. After applying the optimized parameters, the Gradient Boosting algorithm processed the testing dataset with an RMSE of 472, which was slightly better than the prediction from the training data.
+In the current iteration, the baseline performance of the machine learning algorithms achieved an average RMSE of 814. Two algorithms (Random Forests and Gradient Boosting) achieved the top RMSE metrics after the first round of modeling. After a series of tuning trials, Random Forests turned in the top overall result and achieved an RMSE metric of 474. After applying the optimized parameters, the Random Forests algorithm processed the testing dataset with an RMSE of 472, which was slightly better than the prediction from the training data.
 
 By re-engineering the weather-related features, the average performance of all models did better. However, the changes appeared to have little impact on the performance of the ensemble algorithms.
 
