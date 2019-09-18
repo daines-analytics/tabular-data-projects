@@ -1,7 +1,7 @@
 ---
-title: "Binary Classification Model for [Project Name] Using R version 11"
+title: "Multi-Class Classification Model for [Project Name] Using R version 12"
 author: "David Lowe"
-date: "August 2, 2019"
+date: "September 30, 2019"
 output: 
   html_document: 
     toc: yes
@@ -14,21 +14,21 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Template Credit: Adapted from a template made available by Dr. Jason Brownlee of Machine Learning Mastery. [http://machinelearningmastery.com/]
 
-SUMMARY: [Sample Paragraph - The purpose of this project is to construct a predictive model using various machine learning algorithms and to document the end-to-end steps using a template. The Connectionist Bench dataset is a binary classification situation where we are trying to predict one of the two possible outcomes.]
+SUMMARY: [The purpose of this project is to construct a predictive model using various machine learning algorithms and to document the end-to-end steps using a template. The [Dataset Name] is a multi-class classification situation where we are trying to predict one of the several possible outcomes.]
 
-INTRODUCTION: [Sample Paragraph - The data file patterns obtained by bouncing sonar signals off a metal cylinder or a rock at various angles and under various conditions. The transmitted sonar signal is a frequency-modulated chirp, rising in frequency. The data set contains signals obtained from a variety of different aspect angles, spanning 90 degrees for the cylinder and 180 degrees for the rock. Each pattern is a set of 60 numbers in the range 0.0 to 1.0. Each number represents the energy within a particular frequency band, integrated over a certain period of time.]
+INTRODUCTION: [Sample Paragraph - The dataset involves predicting, from USA Forensic Science Service, six types of glass; defined in terms of their oxide content (i.e. Na, Fe, K, etc). The study of classification of types of glass was also partly motivated by criminological investigation. At the scene of the crime, the glass left can be used as evidence...if it is correctly identified!]
 
-ANALYSIS: [Sample Paragraph - The baseline performance of the machine learning algorithms achieved an average accuracy of 78.39%. Two algorithms (Random Forest and Gradient Boosting) achieved the top accuracy metrics after the first round of modeling. After a series of tuning trials, Random Forest turned in the top overall result and achieved an accuracy metric of 85.44%. After applying the optimized parameters, the Random Forest algorithm processed the testing dataset with an accuracy of 80.39%, which was below the prediction from the training data.]
+ANALYSIS: [Sample Paragraph - The baseline performance of the machine learning algorithms achieved an average accuracy of 69.61%. Two algorithms (Random Forest and Gradient Boosting) achieved the top accuracy metrics after the first round of modeling. After a series of tuning trials, Random Forest turned in the top overall result and achieved an accuracy metric of 77.66%. After applying the optimized parameters, the Random Forest algorithm processed the testing dataset with an accuracy of 84.62%, which was even better than the prediction from the training data.]
 
-CONCLUSION: [Sample Paragraph - For this iteration, the Random Forest algorithm achieved the best overall training and validation results. For this dataset, the Random Forest algorithm could be considered for further modeling.]
+CONCLUSION: [Sample Paragraph - For this iteration, the Random Forest algorithm achieved the best overall training and validation results. For this dataset, Random Forest could be considered for further modeling.]
 
-Dataset Used: [Connectionist Bench (Sonar, Mines vs. Rocks) Data Set]
+Dataset Used: [Dataset Name - Glass Identification Dataset]
 
-Dataset ML Model: Binary classification with [numerical | categorical] attributes
+Dataset ML Model: Multi-class classification with [numerical | categorical] attributes
 
-Dataset Reference: [https://archive.ics.uci.edu/ml/datasets/Connectionist+Bench+%28Sonar%2C+Mines+vs.+Rocks%29]
+Dataset Reference: [Dataset URL - https://archive.ics.uci.edu/ml/datasets/glass+identification]
 
-One potential source of performance benchmarks: [https://archive.ics.uci.edu/ml/datasets/Connectionist+Bench+%28Sonar%2C+Mines+vs.+Rocks%29]
+One potential source of performance benchmarks: [Benchmark URL - https://www.kaggle.com/uciml/glass]
 
 The project aims to touch on the following areas:
 
@@ -56,7 +56,6 @@ library(caret)
 library(corrplot)
 library(DMwR)
 library(Hmisc)
-library(mailR)
 library(ROCR)
 library(stringr)
 ```
@@ -69,6 +68,7 @@ seedNum <- 888
 
 # Set up the notifyStatus flag to stop sending progress emails (setting to TRUE will send status emails!)
 notifyStatus <- FALSE
+if (notifyStatus) library(mailR)
 ```
 
 ```{r}
@@ -85,7 +85,7 @@ email_notify <- function(msg=""){
   gateway <- Sys.getenv("SMTP_GATEWAY")
   smtpuser <- Sys.getenv("SMTP_USERNAME")
   password <- Sys.getenv("SMTP_PASSWORD")
-  sbj_line <- "Notification from R Binary Classification Script"
+  sbj_line <- "Notification from R Multi-Class Classification Script"
   send.mail(
     from = sender,
     to = receiver,
@@ -105,7 +105,7 @@ if (notifyStatus) email_notify(paste("Library and Data Loading has begun!",date(
 
 ```{r}
 # Slicing up the document path to get the final destination file name
-dataset_path <- 'https://archive.ics.uci.edu/ml/machine-learning-databases/undocumented/connectionist-bench/sonar/sonar.all-data'
+dataset_path <- 'https://archive.ics.uci.edu/ml/machine-learning-databases/glass/glass.data'
 doc_path_list <- str_split(dataset_path, "/")
 dest_file <- doc_path_list[[1]][length(doc_path_list[[1]])]
 
@@ -119,9 +119,10 @@ if (!file.exists(dest_file)) {
 }
 
 inputFile <- dest_file
-colNames <- paste0("attr",1:60)
-colNames <- c(colNames, 'targetVar')
+colNames <- c('Id','RI','Na','Mg','Al','Si','K','Ca','Ba','Fe','Glass')
 Xy_original <- read.csv(inputFile, sep=',', header=FALSE, col.names = colNames)
+Xy_original['Id'] <- NULL
+Xy_original$Glass <- as.factor(Xy_original$Glass)
 
 # Different ways of reading and processing the input dataset. Saving these for future references.
 #X_train <- read.fwf("X_train.txt", widths = widthVector, col.names = colNames)
@@ -146,7 +147,7 @@ sapply(Xy_original, function(x) sum(is.na(x)))
 ### 1.d) Data Cleaning
 
 ```{r}
-# Not applicable for this iteration of the project
+# Not applicable for this iteration of the project.
 # Sample code for performing basic data cleaning tasks
 
 # Dropping features
@@ -187,44 +188,37 @@ totCol <- ncol(Xy_original)
 
 # Set up variable totAttr for the total number of attribute columns
 totAttr <- totCol-1
-```
 
-```{r}
 # targetCol variable indicates the column location of the target/class variable
 # If the first column, set targetCol to 1. If the last column, set targetCol to totCol
 # if (targetCol <> 1) and (targetCol <> totCol), be aware when slicing up the dataframes for visualization! 
 targetCol <- totCol
 
 # Standardize the class column to the name of targetVar if applicable
-#colnames(Xy_original)[targetCol] <- "targetVar"
-#Xy_original$targetVar <- relevel(Xy_original$targetVar,"pos")
+colnames(Xy_original)[targetCol] <- "targetVar"
 ```
 
 ```{r}
-# Create various sub-datasets for visualization and cleaning/transformation operations.
-set.seed(seedNum)
-
-# Use 75% of the data to train the models and the remaining for testing/validation
-training_index <- createDataPartition(Xy_original$targetVar, p=0.75, list=FALSE)
-Xy_train <- Xy_original[training_index,]
-Xy_test <- Xy_original[-training_index,]
+# We create attribute-only and target-only datasets (X_original and y_original)
+# for various visualization and cleaning/transformation operations
 
 if (targetCol==1) {
-  X_train <- Xy_train[,(targetCol+1):totCol]
-  y_train <- Xy_train[,targetCol]
-  y_test <- Xy_test[,targetCol]
+  X_original <- Xy_original[,(targetCol+1):totCol]
+  y_original <- Xy_original[,targetCol]
 } else {
-  X_train <- Xy_train[,1:(totAttr)]
-  y_train <- Xy_train[,totCol]
-  y_test <- Xy_test[,totCol]
+  X_original <- Xy_original[,1:(totAttr)]
+  y_original <- Xy_original[,totCol]
 }
+
+dim(Xy_original)
+dim(X_original)
 ```
 
 ### 1.f) Set up the parameters for data visualization
 
 ```{r}
 # Set up the number of row and columns for visualization display. dispRow * dispCol should be >= totAttr
-dispCol <- 4
+dispCol <- 3
 if (totAttr%%dispCol == 0) {
 dispRow <- totAttr%/%dispCol
 } else {
@@ -249,31 +243,31 @@ if (notifyStatus) email_notify(paste("Data Summarization and Visualization has b
 #### 2.a.i) Peek at the data itself
 
 ```{r}
-head(Xy_train)
+head(Xy_original)
 ```
 
 #### 2.a.ii) Dimensions of the dataset
 
 ```{r}
-dim(Xy_train)
+dim(Xy_original)
 ```
 
 #### 2.a.iii) Types of the attribute
 
 ```{r}
-sapply(Xy_train, class)
+sapply(Xy_original, class)
 ```
 
 #### 2.a.iv) Statistical summary of the attributes
 
 ```{r}
-summary(Xy_train)
+summary(Xy_original)
 ```
 
 #### 2.a.v) Summarize the levels of the class attribute
 
 ```{r}
-cbind(freq=table(y_train), percentage=prop.table(table(y_train))*100)
+cbind(freq=table(y_original), percentage=prop.table(table(y_original))*100)
 ```
 
 ### 2.b) Data visualizations
@@ -282,7 +276,7 @@ cbind(freq=table(y_train), percentage=prop.table(table(y_train))*100)
 # Boxplots for each attribute
 # par(mfrow=c(dispRow,dispCol))
 for(i in 1:totAttr) {
-	boxplot(X_train[,i], main=names(X_train)[i])
+	boxplot(X_original[,i], main=names(X_original)[i])
 }
 ```
 
@@ -290,7 +284,7 @@ for(i in 1:totAttr) {
 # Histograms each attribute
 # par(mfrow=c(dispRow,dispCol))
 for(i in 1:totAttr) {
-	hist(X_train[,i], main=names(X_train)[i])
+	hist(X_original[,i], main=names(X_original)[i])
 }
 ```
 
@@ -298,13 +292,13 @@ for(i in 1:totAttr) {
 # Density plot for each attribute
 # par(mfrow=c(dispRow,dispCol))
 for(i in 1:totAttr) {
-	plot(density(X_train[,i]), main=names(X_train)[i])
+	plot(density(X_original[,i]), main=names(X_original)[i])
 }
 ```
 
 ```{r}
 # Correlation matrix
-correlations <- cor(X_train)
+correlations <- cor(X_original)
 corrplot(correlations, method="circle")
 ```
 
@@ -322,7 +316,44 @@ Some dataset may require additional preparation activities that will best expose
 if (notifyStatus) email_notify(paste("Data Cleaning and Transformation has begun!",date()))
 ```
 
-### 3.a) Data Transforms
+### 3.a) Feature Scaling and Data Pre-Processing
+
+```{r}
+# Not applicable for this iteration of the project
+# Apply feature scaling techniques
+
+# preProcValues <- preProcess(X_original, method = c("center", "scale"))
+# X_transformed <- predict(preProcValues, X_original)
+# Xy_original <- cbind(X_transformed, y_original)
+# colnames(Xy_original)[totCol] <- "targetVar"
+```
+
+```{r}
+# Not applicable for this iteration of the project
+# Histograms each attribute
+
+# for(i in 1:totAttr) {
+# 	hist(X_transformed[,i], main=names(X_transformed)[i])
+# }
+```
+
+### 3.b) Splitting Data into Training and Test Sets
+
+```{r}
+# Create various sub-datasets for visualization and cleaning/transformation operations.
+set.seed(seedNum)
+
+# Use 75% of the data to train the models and the remaining for testing/validation
+training_index <- createDataPartition(Xy_original$targetVar, p=0.75, list=FALSE)
+Xy_train <- Xy_original[training_index,]
+Xy_test <- Xy_original[-training_index,]
+
+if (targetCol==1) {
+  y_test <- Xy_test[,targetCol]
+} else {
+  y_test <- Xy_test[,totCol]
+}
+```
 
 ```{r}
 # Not applicable for this iteration of the project
@@ -335,7 +366,7 @@ if (notifyStatus) email_notify(paste("Data Cleaning and Transformation has begun
 # cbind(freq=table(y_train), percentage=prop.table(table(y_train))*100)
 ```
 
-### 3.b) Feature Selection
+### 3.c) Feature Selection
 
 ```{r}
 # Not applicable for this iteration of the project
@@ -359,6 +390,7 @@ if (notifyStatus) email_notify(paste("Data Cleaning and Transformation has begun
 # Not applicable for this iteration of the project
 # Sample code for performing Attribute Importance Ranking (Block #1 of 3)
 
+# Feature Importance with Gradient Boosting Classifier
 # startTimeModule <- proc.time()
 # set.seed(seedNum)
 # library(gbm)
@@ -403,21 +435,41 @@ if (notifyStatus) email_notify(paste("Data Cleaning and Transformation has begun
 
 ```{r}
 # Not applicable for this iteration of the project
-# Sample code for performing Recursive Feature Elimination (Block #1 of 2)
+# Sample code for performing Recursive Feature Elimination (Block #1 of 3)
 
+# Perform Recursive Feature Elimination using Random Forest
 # startTimeModule <- proc.time()
 # set.seed(seedNum)
-# rfeCTRL <- rfeControl(functions=rfFuncs, method="cv", number=10)
-# rfeResults <- rfe(Xy_train[,1:totAttr], Xy_train[,totCol], sizes=c(30:55), rfeControl=rfeCTRL)
-# print(rfeResults)
-# rfeAttributes <- predictors(rfeResults)
-# cat('Number of attributes identified from the RFE algorithm:',length(rfeAttributes))
-# print(rfeAttributes)
-# plot(rfeResults, type=c("g", "o"))
+# X_rfe <- Xy_train[,1:totAttr]
+# y_rfe <- Xy_train[,totCol]
+# normalization <- preProcess(X_rfe)
+# X_rfe <- predict(normalization, X_rfe)
+# X_rfe <- as.data.frame(X_rfe)
+# rfeCTRL <- rfeControl(functions=rfFuncs, method="cv", number=10, repeats=1, verbose=FALSE, returnResamp="all")
+# optimalVars <- 50
+# subsets <- c(2:optimalVars)
+# rfeProfile <- rfe(X_rfe, y_rfe, sizes=subsets, rfeControl=rfeCTRL)
+# print(rfeProfile)
+# plot(rfeProfile, type=c("g", "o"))
 ```
 
 ```{r}
 # Sample code for performing Recursive Feature Elimination (Block #2 of 3)
+
+# Perfrom the Recursive Feature Elimination (RFE) technique
+# numberRFEVars <- length(predictors(rfeProfile))
+# if (numberRFEVars <= optimalVars) {
+#   rfeAttributes <- predictors(rfeProfile)
+# } else {
+#   newProfile <- update(rfeProfile, x=X_rfe, y=y_rfe, size=optimalVars)
+#   rfeAttributes <- newProfile$bestVar
+# }
+# cat('Number of attributes selected from the RFE algorithm:',length(rfeAttributes),'\n')
+# print(rfeAttributes)
+```
+
+```{r}
+# Sample code for performing Recursive Feature Elimination (Block #3 of 3)
 
 # Removing the unselected attributes from the training and validation dataframes
 # rfeAttributes <- c(rfeAttributes,"targetVar")
@@ -425,7 +477,7 @@ if (notifyStatus) email_notify(paste("Data Cleaning and Transformation has begun
 # Xy_test <- Xy_test[, (names(Xy_test) %in% rfeAttributes)]
 ```
 
-### 3.c) Display the Final Datasets for Model-Building
+### 3.d) Display the Final Datasets for Model-Building
 
 ```{r}
 # We finalize the training and testing datasets for the modeling activities
@@ -450,7 +502,7 @@ After the data-prep, we next work on finding a workable model by evaluating a su
 
 For this project, we will evaluate one linear, one non-linear, and three ensemble algorithms:
 
-Linear Algorithm: Logistic Regression
+Linear Algorithm: Linear Discriminant Analysis
 
 Non-Linear Algorithm: Decision Trees (CART)
 
@@ -460,15 +512,19 @@ The random number seed is reset before each run to ensure that the evaluation of
 
 ### 4.a) Generate models using linear algorithms
 
-```{r LR}
-# Logistic Regression (Classification)
-if (notifyStatus) email_notify(paste("Logistic Regression modeling has begun!",date()))
+```{r}
+startModeling <- proc.time()
+```
+
+```{r LDA}
+# Linear Discriminant Analysis (Classification)
+if (notifyStatus) email_notify(paste("Linear Discriminant Analysis modeling has begun!",date()))
 startTimeModule <- proc.time()
 set.seed(seedNum)
-fit.glm <- train(targetVar~., data=Xy_train, method="glm", metric=metricTarget, trControl=control)
-print(fit.glm)
+fit.lda <- train(targetVar~., data=Xy_train, method="lda", metric=metricTarget, trControl=control)
+print(fit.lda)
 proc.time()-startTimeModule
-if (notifyStatus) email_notify(paste("Logistic Regression modeling completed!",date()))
+if (notifyStatus) email_notify(paste("Linear Discriminant Analysis modeling completed!",date()))
 ```
 
 ### 4.b) Generate models using nonlinear algorithms
@@ -514,8 +570,8 @@ if (notifyStatus) email_notify(paste("Random Forest modeling completed!",date())
 if (notifyStatus) email_notify(paste("Gradient Boosting modeling has begun!",date()))
 startTimeModule <- proc.time()
 set.seed(seedNum)
-fit.gbm <- train(targetVar~., data=Xy_train, method="xgbTree", metric=metricTarget, trControl=control, verbose=F)
 # fit.gbm <- train(targetVar~., data=Xy_train, method="gbm", metric=metricTarget, trControl=control, verbose=F)
+fit.gbm <- train(targetVar~., data=Xy_train, method="xgbTree", metric=metricTarget, trControl=control, verbose=F)
 print(fit.gbm)
 proc.time()-startTimeModule
 if (notifyStatus) email_notify(paste("Gradient Boosting modeling completed!",date()))
@@ -524,11 +580,12 @@ if (notifyStatus) email_notify(paste("Gradient Boosting modeling completed!",dat
 ### 4.d) Compare baseline algorithms
 
 ```{r SPOT_CHECK}
-results <- resamples(list(LR=fit.glm, CART=fit.cart, BagCART=fit.bagcart, RF=fit.rf, GBM=fit.gbm))
+results <- resamples(list(LDA=fit.lda, CART=fit.cart, BagCART=fit.bagcart, RF=fit.rf, GBM=fit.gbm))
 summary(results)
 dotplot(results)
 cat('The average accuracy from all models is:',
-    mean(c(results$values$`LR~Accuracy`,results$values$`CART~Accuracy`,results$values$`BagCART~Accuracy`,results$values$`RF~Accuracy`,results$values$`GBM~Accuracy`)))
+    mean(c(results$values$`LDA~Accuracy`,results$values$`CART~Accuracy`,results$values$`BagCART~Accuracy`,results$values$`RF~Accuracy`,results$values$`GBM~Accuracy`)),'\n')
+cat('Total training time for all models:',proc.time()-startModeling)
 ```
 
 ## 5. Improve Accuracy or Results
@@ -544,8 +601,9 @@ Finally, we will tune the best-performing algorithms from each group further and
 if (notifyStatus) email_notify(paste("Algorithm #1 tuning has begun!",date()))
 startTimeModule <- proc.time()
 set.seed(seedNum)
-grid <- expand.grid(mtry=c(2,15,30,45,60))
-fit.final1 <- train(targetVar~., data=Xy_train, method="rf", metric=metricTarget, trControl=control)
+grid <- expand.grid(mtry = c(1,3,5,7,9))
+fit.final1 <- train(targetVar~., data=Xy_train, method="rf", metric=metricTarget, tuneGrid=grid, trControl=control)
+plot(fit.final1)
 print(fit.final1)
 proc.time()-startTimeModule
 if (notifyStatus) email_notify(paste("Algorithm #1 tuning completed!",date()))
@@ -556,7 +614,7 @@ if (notifyStatus) email_notify(paste("Algorithm #1 tuning completed!",date()))
 if (notifyStatus) email_notify(paste("Algorithm #2 tuning has begun!",date()))
 startTimeModule <- proc.time()
 set.seed(seedNum)
-grid <- expand.grid(nrounds=c(100,200,300,400,500), max_depth=3, eta=0.4, gamma=0, colsample_bytree=0.6, min_child_weight=1, subsample=0.5)
+grid <- expand.grid(nrounds=c(50,100,200,300), max_depth=3, eta=0.3, gamma=0, colsample_bytree=0.8, min_child_weight=1, subsample=0.75)
 fit.final2 <- train(targetVar~., data=Xy_train, method="xgbTree", metric=metricTarget, tuneGrid=grid, trControl=control, verbose=F)
 plot(fit.final2)
 print(fit.final2)
@@ -588,46 +646,32 @@ if (notifyStatus) email_notify(paste("Model Validation and Final Model Creation 
 ```{r PREDICT1}
 predictions <- predict(fit.final1, newdata=Xy_test)
 confusionMatrix(predictions, y_test)
-
-pred <- prediction(as.numeric(predictions), as.numeric(y_test))
-perf <- performance(pred, measure = "tpr", x.measure = "fpr")
-plot(perf, colorize=TRUE)
-auc <- performance(pred, measure = "auc")
-auc <- auc@y.values[[1]]
-cat('Area under the curve is:', auc)
 ```
 
 ```{r PREDICT2}
 predictions <- predict(fit.final2, newdata=Xy_test)
 confusionMatrix(predictions, y_test)
-
-pred <- prediction(as.numeric(predictions), as.numeric(y_test))
-perf <- performance(pred, measure = "tpr", x.measure = "fpr")
-plot(perf, colorize=TRUE)
-auc <- performance(pred, measure = "auc")
-auc <- auc@y.values[[1]]
-cat('Area under the curve is:', auc)
 ```
 
 ### 6.b) Create standalone model on entire training dataset
 
-```{r FINALMODEL}
+```{r}
 startTimeModule <- proc.time()
 set.seed(seedNum)
-library(randomForest)
 
 # Combining datasets to form a complete dataset that will be used to train the final model
 Xy_complete <- rbind(Xy_train, Xy_test)
 
-finalModel <- randomForest(targetVar~., Xy_complete, mtry=2, na.action=na.omit)
-summary(finalModel)
+# library(randomForest)
+# finalModel <- randomForest(targetVar~., Xy_complete, mtry=3, na.action=na.omit)
+# summary(finalModel)
 proc.time()-startTimeModule
 ```
 
 ### 6.c) Save model for later use
 
 ```{r}
-#saveRDS(finalModel, "./finalModel_BinaryClass.rds")
+#saveRDS(finalModel, "./finalModel_MultiClass.rds")
 ```
 
 ```{r}

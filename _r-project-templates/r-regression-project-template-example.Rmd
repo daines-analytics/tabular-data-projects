@@ -1,7 +1,7 @@
 ---
-title: "Regression Model for [Project Name] Using R version 11"
+title: "Regression Model for [Project Name] Using R version 12"
 author: "David Lowe"
-date: "August 2, 2019"
+date: "September 30, 2019"
 output: 
   html_document: 
     toc: yes
@@ -18,7 +18,7 @@ SUMMARY: [The purpose of this project is to construct a predictive model using v
 
 INTRODUCTION: [Sample Paragraph - The dataset for this project originates from the UCI Machine Learning Repository. The Boston housing data was collected in 1978 and each of the 506 entries represents aggregated data about 14 features for homes from various suburbs in Boston, Massachusetts.]
 
-ANALYSIS: [Sample Paragraph - The baseline performance of the machine learning algorithms achieved an average RMSE of 4.20. Two algorithms (Random Forest and Gradient Boosting) achieved the top RMSE metrics after the first round of modeling. After a series of tuning trials, Random Forest turned in the top overall result and achieved an RMSE metric of 3.02. After applying the optimized parameters, the Random Forest algorithm processed the testing dataset with an RMSE of 3.94, which was slightly above the prediction from the training data.]
+ANALYSIS: [Sample Paragraph - The baseline performance of the machine learning algorithms achieved an average RMSE of 4.18. Two algorithms (Random Forest and Gradient Boosting) achieved the top RMSE metrics after the first round of modeling. After a series of tuning trials, Random Forest turned in the top overall result and achieved an RMSE metric of 3.02. After applying the optimized parameters, the Random Forest algorithm processed the testing dataset with an RMSE of 4.34, which was worse than the prediction from the training data.]
 
 CONCLUSION: [Sample Paragraph - For this iteration, the Random Forest algorithm achieved the best overall training and validation results. For this dataset, the Random Forest algorithm could be considered for further modeling.]
 
@@ -56,7 +56,6 @@ library(caret)
 library(corrplot)
 library(DMwR)
 library(Hmisc)
-library(mailR)
 library(ROCR)
 library(stringr)
 ```
@@ -69,6 +68,7 @@ seedNum <- 888
 
 # Set up the notifyStatus flag to stop sending progress emails (setting to TRUE will send status emails!)
 notifyStatus <- FALSE
+if (notifyStatus) library(mailR)
 ```
 
 ```{r}
@@ -85,7 +85,7 @@ email_notify <- function(msg=""){
   gateway <- Sys.getenv("SMTP_GATEWAY")
   smtpuser <- Sys.getenv("SMTP_USERNAME")
   password <- Sys.getenv("SMTP_PASSWORD")
-  sbj_line <- "Notification from R Binary Classification Script"
+  sbj_line <- "Notification from R Regression Modeling Script"
   send.mail(
     from = sender,
     to = receiver,
@@ -187,9 +187,7 @@ totCol <- ncol(Xy_original)
 
 # Set up variable totAttr for the total number of attribute columns
 totAttr <- totCol-1
-```
 
-```{r}
 # targetCol variable indicates the column location of the target/class variable
 # If the first column, set targetCol to 1. If the last column, set targetCol to totCol
 # if (targetCol <> 1) and (targetCol <> totCol), be aware when slicing up the dataframes for visualization! 
@@ -200,23 +198,19 @@ colnames(Xy_original)[targetCol] <- "targetVar"
 ```
 
 ```{r}
-# Create various sub-datasets for visualization and cleaning/transformation operations.
-set.seed(seedNum)
-
-# Use 75% of the data to train the models and the remaining for testing/validation
-training_index <- createDataPartition(Xy_original$targetVar, p=0.75, list=FALSE)
-Xy_train <- Xy_original[training_index,]
-Xy_test <- Xy_original[-training_index,]
+# We create attribute-only and target-only datasets (X_original and y_original)
+# for various visualization and cleaning/transformation operations
 
 if (targetCol==1) {
-  X_train <- Xy_train[,(targetCol+1):totCol]
-  y_train <- Xy_train[,targetCol]
-  y_test <- Xy_test[,targetCol]
+  X_original <- Xy_original[,(targetCol+1):totCol]
+  y_original <- Xy_original[,targetCol]
 } else {
-  X_train <- Xy_train[,1:(totAttr)]
-  y_train <- Xy_train[,totCol]
-  y_test <- Xy_test[,totCol]
+  X_original <- Xy_original[,1:(totAttr)]
+  y_original <- Xy_original[,totCol]
 }
+
+dim(Xy_original)
+dim(X_original)
 ```
 
 ### 1.f) Set up the parameters for data visualization
@@ -248,31 +242,31 @@ if (notifyStatus) email_notify(paste("Data Summarization and Visualization has b
 #### 2.a.i) Peek at the data itself
 
 ```{r}
-head(Xy_train)
+head(Xy_original)
 ```
 
 #### 2.a.ii) Dimensions of the dataset
 
 ```{r}
-dim(Xy_train)
+dim(Xy_original)
 ```
 
 #### 2.a.iii) Types of the attribute
 
 ```{r}
-sapply(Xy_train, class)
+sapply(Xy_original, class)
 ```
 
 #### 2.a.iv) Statistical summary of the attributes
 
 ```{r}
-summary(Xy_train)
+summary(Xy_original)
 ```
 
 #### 2.a.v) Count missing values
 
 ```{r}
-sapply(Xy_train, function(x) sum(is.na(x)))
+sapply(Xy_original, function(x) sum(is.na(x)))
 ```
 
 ### 2.b) Data visualizations
@@ -281,7 +275,7 @@ sapply(Xy_train, function(x) sum(is.na(x)))
 # Boxplots for each attribute
 # par(mfrow=c(dispRow,dispCol))
 for(i in 1:totAttr) {
-	boxplot(X_train[,i], main=names(X_train)[i])
+	boxplot(X_original[,i], main=names(X_original)[i])
 }
 ```
 
@@ -289,7 +283,7 @@ for(i in 1:totAttr) {
 # Histograms each attribute
 # par(mfrow=c(dispRow,dispCol))
 for(i in 1:totAttr) {
-	hist(X_train[,i], main=names(X_train)[i])
+	hist(X_original[,i], main=names(X_original)[i])
 }
 ```
 
@@ -297,13 +291,13 @@ for(i in 1:totAttr) {
 # Density plot for each attribute
 # par(mfrow=c(dispRow,dispCol))
 for(i in 1:totAttr) {
-	plot(density(X_train[,i]), main=names(X_train)[i])
+	plot(density(X_original[,i]), main=names(X_original)[i])
 }
 ```
 
 ```{r}
 # Correlation matrix
-correlations <- cor(X_train)
+correlations <- cor(X_original)
 corrplot(correlations, method="circle")
 ```
 
@@ -322,7 +316,44 @@ Some dataset may require additional preparation activities that will best expose
 if (notifyStatus) email_notify(paste("Data Cleaning and Transformation has begun!",date()))
 ```
 
-### 3.a) Data Transforms
+### 3.a) Feature Scaling and Data Pre-Processing
+
+```{r}
+# Not applicable for this iteration of the project
+# Apply feature scaling techniques
+
+# preProcValues <- preProcess(X_original, method = c("center", "scale"))
+# X_transformed <- predict(preProcValues, X_original)
+# Xy_original <- cbind(X_transformed, y_original)
+# colnames(Xy_original)[totCol] <- "targetVar"
+```
+
+```{r}
+# Not applicable for this iteration of the project
+# Histograms each attribute
+
+# for(i in 1:totAttr) {
+# 	hist(X_transformed[,i], main=names(X_transformed)[i])
+# }
+```
+
+### 3.b) Splitting Data into Training and Test Sets
+
+```{r}
+# Create various sub-datasets for visualization and cleaning/transformation operations.
+set.seed(seedNum)
+
+# Use 75% of the data to train the models and the remaining for testing/validation
+training_index <- createDataPartition(Xy_original$targetVar, p=0.75, list=FALSE)
+Xy_train <- Xy_original[training_index,]
+Xy_test <- Xy_original[-training_index,]
+
+if (targetCol==1) {
+  y_test <- Xy_test[,targetCol]
+} else {
+  y_test <- Xy_test[,totCol]
+}
+```
 
 ```{r}
 # Not applicable for this iteration of the project
@@ -335,7 +366,7 @@ if (notifyStatus) email_notify(paste("Data Cleaning and Transformation has begun
 # cbind(freq=table(y_train), percentage=prop.table(table(y_train))*100)
 ```
 
-### 3.b) Feature Selection
+### 3.c) Feature Selection
 
 ```{r}
 # Not applicable for this iteration of the project
@@ -359,6 +390,7 @@ if (notifyStatus) email_notify(paste("Data Cleaning and Transformation has begun
 # Not applicable for this iteration of the project
 # Sample code for performing Attribute Importance Ranking (Block #1 of 3)
 
+# Feature Importance with Gradient Boosting Classifier
 # startTimeModule <- proc.time()
 # set.seed(seedNum)
 # library(gbm)
@@ -403,21 +435,41 @@ if (notifyStatus) email_notify(paste("Data Cleaning and Transformation has begun
 
 ```{r}
 # Not applicable for this iteration of the project
-# Sample code for performing Recursive Feature Elimination (Block #1 of 2)
+# Sample code for performing Recursive Feature Elimination (Block #1 of 3)
 
+# Perform Recursive Feature Elimination using Random Forest
 # startTimeModule <- proc.time()
 # set.seed(seedNum)
-# rfeCTRL <- rfeControl(functions=rfFuncs, method="cv", number=10)
-# rfeResults <- rfe(Xy_train[,1:totAttr], Xy_train[,totCol], sizes=c(30:55), rfeControl=rfeCTRL)
-# print(rfeResults)
-# rfeAttributes <- predictors(rfeResults)
-# cat('Number of attributes identified from the RFE algorithm:',length(rfeAttributes))
-# print(rfeAttributes)
-# plot(rfeResults, type=c("g", "o"))
+# X_rfe <- Xy_train[,1:totAttr]
+# y_rfe <- Xy_train[,totCol]
+# normalization <- preProcess(X_rfe)
+# X_rfe <- predict(normalization, X_rfe)
+# X_rfe <- as.data.frame(X_rfe)
+# rfeCTRL <- rfeControl(functions=rfFuncs, method="cv", number=10, repeats=1, verbose=FALSE, returnResamp="all")
+# optimalVars <- 50
+# subsets <- c(2:optimalVars)
+# rfeProfile <- rfe(X_rfe, y_rfe, sizes=subsets, rfeControl=rfeCTRL)
+# print(rfeProfile)
+# plot(rfeProfile, type=c("g", "o"))
 ```
 
 ```{r}
 # Sample code for performing Recursive Feature Elimination (Block #2 of 3)
+
+# Perfrom the Recursive Feature Elimination (RFE) technique
+# numberRFEVars <- length(predictors(rfeProfile))
+# if (numberRFEVars <= optimalVars) {
+#   rfeAttributes <- predictors(rfeProfile)
+# } else {
+#   newProfile <- update(rfeProfile, x=X_rfe, y=y_rfe, size=optimalVars)
+#   rfeAttributes <- newProfile$bestVar
+# }
+# cat('Number of attributes selected from the RFE algorithm:',length(rfeAttributes),'\n')
+# print(rfeAttributes)
+```
+
+```{r}
+# Sample code for performing Recursive Feature Elimination (Block #3 of 3)
 
 # Removing the unselected attributes from the training and validation dataframes
 # rfeAttributes <- c(rfeAttributes,"targetVar")
@@ -425,7 +477,7 @@ if (notifyStatus) email_notify(paste("Data Cleaning and Transformation has begun
 # Xy_test <- Xy_test[, (names(Xy_test) %in% rfeAttributes)]
 ```
 
-### 3.c) Display the Final Datasets for Model-Building
+### 3.d) Display the Final Datasets for Model-Building
 
 ```{r}
 # We finalize the training and testing datasets for the modeling activities
@@ -459,6 +511,10 @@ Ensemble Algorithms: Bagged CART, Random Forest, and Gradient Boosting
 The random number seed is reset before each run to ensure that the evaluation of each algorithm is performed using the same data splits. It ensures the results are directly comparable.
 
 ### 4.a) Generate models using linear algorithms
+
+```{r}
+startModeling <- proc.time()
+```
 
 ```{r LR}
 # Linear Regression (Regression)
@@ -561,7 +617,8 @@ results <- resamples(list(LR=fit.lm, RIDGE=fit.ridge, LASSO=fit.lasso, ENET=fit.
 summary(results)
 dotplot(results)
 cat('The average RMSE from all models is:',
-    mean(c(results$values$`LR~RMSE`,results$values$`RIDGE~RMSE`,results$values$`LASSO~RMSE`,results$values$`ENET~RMSE`,results$values$`CART~RMSE`,results$values$`BagCART~RMSE`,results$values$`RF~RMSE`,results$values$`GBM~RMSE`)))
+    mean(c(results$values$`LR~RMSE`,results$values$`RIDGE~RMSE`,results$values$`LASSO~RMSE`,results$values$`ENET~RMSE`,results$values$`CART~RMSE`,results$values$`BagCART~RMSE`,results$values$`RF~RMSE`,results$values$`GBM~RMSE`)),'\n')
+cat('Total training time for all models:',proc.time()-startModeling)
 ```
 
 ## 5. Improve Accuracy or Results
@@ -621,13 +678,13 @@ if (notifyStatus) email_notify(paste("Model Validation and Final Model Creation 
 
 ```{r PREDICT1}
 predictions <- predict(fit.final1, newdata=Xy_test)
-cat("The RMSE for the test data is:", RMSE(predictions, y_test))
+cat("The RMSE for the test data is:", RMSE(predictions, y_test),'\n')
 cat("The R2 score for the model is:", R2(predictions, y_test))
 ```
 
 ```{r PREDICT2}
 predictions <- predict(fit.final2, newdata=Xy_test)
-cat("The RMSE for the test data is:", RMSE(predictions, y_test))
+cat("The RMSE for the test data is:", RMSE(predictions, y_test),'\n')
 cat("The R2 score for the model is:", R2(predictions, y_test))
 ```
 
@@ -636,13 +693,13 @@ cat("The R2 score for the model is:", R2(predictions, y_test))
 ```{r FINALMODEL}
 startTimeModule <- proc.time()
 set.seed(seedNum)
-library(randomForest)
 
 # Combining datasets to form a complete dataset that will be used to train the final model
 Xy_complete <- rbind(Xy_train, Xy_test)
 
-finalModel <- randomForest(targetVar~., Xy_complete, mtry=5, na.action=na.omit)
-summary(finalModel)
+# library(randomForest)
+# finalModel <- randomForest(targetVar~., Xy_complete, mtry=5, na.action=na.omit)
+# summary(finalModel)
 proc.time()-startTimeModule
 ```
 
