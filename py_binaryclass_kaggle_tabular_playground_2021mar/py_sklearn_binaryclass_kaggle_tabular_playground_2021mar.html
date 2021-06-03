@@ -14261,7 +14261,7 @@ a.anchor-link {
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
 <h3 id="Binary-Classification-Model-for-Kaggle-Tabular-Playground-Series-Mar-2021-Using-Python-and-Scikit-Learn">Binary Classification Model for Kaggle Tabular Playground Series Mar 2021 Using Python and Scikit-Learn<a class="anchor-link" href="#Binary-Classification-Model-for-Kaggle-Tabular-Playground-Series-Mar-2021-Using-Python-and-Scikit-Learn">&#182;</a></h3><h3 id="David-Lowe">David Lowe<a class="anchor-link" href="#David-Lowe">&#182;</a></h3><h3 id="June-2,-2021">June 2, 2021<a class="anchor-link" href="#June-2,-2021">&#182;</a></h3><p>Template Credit: Adapted from a template made available by Dr. Jason Brownlee of Machine Learning Mastery. [<a href="https://machinelearningmastery.com/">https://machinelearningmastery.com/</a>]</p>
 <p>SUMMARY: This project aims to construct a predictive model using various machine learning algorithms and document the end-to-end steps using a template. The Kaggle Tabular Playground Mar 2021 dataset is a binary classification situation where we attempt to predict one of the two possible outcomes.</p>
-<p>INTRODUCTION: Kaggle wants to provide an approachable environment for relatively new people in their data science journey. Since January 2021, they have hosted playground-style competitions on Kaggle with fun but less complex, tabular datasets. The February dataset may be synthetic but is based on a real dataset and generated using a CTGAN. The original dataset tries to predict the amount of an insurance claim. Although the features are anonymized, they have properties relating to real-world features.</p>
+<p>INTRODUCTION: Kaggle wants to provide an approachable environment for relatively new people in their data science journey. Since January 2021, they have hosted playground-style competitions on Kaggle with fun but less complex, tabular datasets. The dataset may be synthetic but is based on a real dataset and generated using a CTGAN. The original dataset tries to predict the amount of an insurance claim. Although the features are anonymized, they have properties relating to real-world features.</p>
 <p>ANALYSIS: The average performance of the machine learning algorithms achieved a ROC benchmark of 0.8430 using the training dataset. We selected Logistic Regression and Random Forest to perform the tuning exercises. After a series of tuning trials, the refined Random Forest model processed the training dataset with a final ROC score of 0.8901. When we processed Kaggle's test dataset with the final model, the model achieved a ROC score of 0.8902.</p>
 <p>CONCLUSION: In this iteration, the Random Forest model appeared to be a suitable algorithm for modeling this dataset.</p>
 <p>Dataset Used: Kaggle Tabular Playground 2021 Mar Data Set</p>
@@ -14372,7 +14372,7 @@ a.anchor-link {
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>The number of available CPUs is: 8
+<pre>The number of available CPUs is: 4
 </pre>
 </div>
 </div>
@@ -15625,7 +15625,7 @@ Total number of columns in the feature dataframe: 30
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr">
 <pre>[Parallel(n_jobs=2)]: Using backend LokyBackend with 2 concurrent workers.
-[Parallel(n_jobs=2)]: Done   5 out of   5 | elapsed:  1.0min finished
+[Parallel(n_jobs=2)]: Done   5 out of   5 | elapsed:  1.3min finished
 [Parallel(n_jobs=2)]: Using backend LokyBackend with 2 concurrent workers.
 </pre>
 </div>
@@ -15640,7 +15640,7 @@ Total number of columns in the feature dataframe: 30
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
 <pre>LGR: 0.882844 (0.001201)
 LogisticRegression(n_jobs=2, random_state=888)
-Model training time: 0:01:00.152186 
+Model training time: 0:01:16.836866 
 
 </pre>
 </div>
@@ -15653,7 +15653,7 @@ Model training time: 0:01:00.152186
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr">
-<pre>[Parallel(n_jobs=2)]: Done   5 out of   5 | elapsed:  5.1min finished
+<pre>[Parallel(n_jobs=2)]: Done   5 out of   5 | elapsed:  5.0min finished
 [Parallel(n_jobs=2)]: Using backend LokyBackend with 2 concurrent workers.
 </pre>
 </div>
@@ -15668,7 +15668,7 @@ Model training time: 0:01:00.152186
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
 <pre>CART: 0.714992 (0.001201)
 DecisionTreeClassifier(random_state=888)
-Model training time: 0:05:07.393630 
+Model training time: 0:04:57.128620 
 
 </pre>
 </div>
@@ -15681,7 +15681,7 @@ Model training time: 0:05:07.393630
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr">
-<pre>[Parallel(n_jobs=2)]: Done   5 out of   5 | elapsed: 47.8min finished
+<pre>[Parallel(n_jobs=2)]: Done   5 out of   5 | elapsed: 61.0min finished
 [Parallel(n_jobs=2)]: Using backend LokyBackend with 2 concurrent workers.
 </pre>
 </div>
@@ -15696,7 +15696,7 @@ Model training time: 0:05:07.393630
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
 <pre>KNN: 0.836491 (0.001425)
 KNeighborsClassifier(n_jobs=2)
-Model training time: 0:47:48.790351 
+Model training time: 1:00:59.155826 
 
 </pre>
 </div>
@@ -15709,7 +15709,7 @@ Model training time: 0:47:48.790351
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr">
-<pre>[Parallel(n_jobs=2)]: Done   5 out of   5 | elapsed: 15.4min finished
+<pre>[Parallel(n_jobs=2)]: Done   5 out of   5 | elapsed: 15.2min finished
 [Parallel(n_jobs=2)]: Using backend LokyBackend with 2 concurrent workers.
 </pre>
 </div>
@@ -15724,7 +15724,7 @@ Model training time: 0:47:48.790351
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
 <pre>BGT: 0.854120 (0.001307)
 BaggingClassifier(n_jobs=2, random_state=888)
-Model training time: 0:15:21.303010 
+Model training time: 0:15:14.575447 
 
 </pre>
 </div>
@@ -15737,7 +15737,7 @@ Model training time: 0:15:21.303010
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr">
-<pre>[Parallel(n_jobs=2)]: Done   5 out of   5 | elapsed:  9.4min finished
+<pre>[Parallel(n_jobs=2)]: Done   5 out of   5 | elapsed:  9.2min finished
 [Parallel(n_jobs=2)]: Using backend LokyBackend with 2 concurrent workers.
 </pre>
 </div>
@@ -15752,14 +15752,14 @@ Model training time: 0:15:21.303010
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
 <pre>RNF: 0.887084 (0.001236)
 RandomForestClassifier(n_jobs=2, random_state=888)
-Model training time: 0:09:21.755668 
+Model training time: 0:09:13.999700 
 
 EXT: 0.882665 (0.001086)
 ExtraTreesClassifier(n_jobs=2, random_state=888)
-Model training time: 0:12:00.493101 
+Model training time: 0:11:30.653553 
 
 Average metrics (roc_auc) from all models: 0.8430326710183921
-Total training time for all models: 1:30:39.914086
+Total training time for all models: 1:43:12.375567
 </pre>
 </div>
 </div>
@@ -15771,7 +15771,7 @@ Total training time for all models: 1:30:39.914086
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr">
-<pre>[Parallel(n_jobs=2)]: Done   5 out of   5 | elapsed: 12.0min finished
+<pre>[Parallel(n_jobs=2)]: Done   5 out of   5 | elapsed: 11.5min finished
 </pre>
 </div>
 </div>
@@ -15935,7 +15935,7 @@ Best: 0.882955 using {&#39;C&#39;: 0.1}
 0.882955 (0.001220) with: {&#39;C&#39;: 0.1}
 0.882844 (0.001201) with: {&#39;C&#39;: 1.0}
 0.882763 (0.001224) with: {&#39;C&#39;: 10.0}
-Model training time: 0:13:52.102095
+Model training time: 0:14:08.131094
 </pre>
 </div>
 </div>
@@ -16033,7 +16033,7 @@ Best: 0.890178 using {&#39;n_estimators&#39;: 750}
 0.889287 (0.001130) with: {&#39;n_estimators&#39;: 250}
 0.889944 (0.001152) with: {&#39;n_estimators&#39;: 500}
 0.890178 (0.001076) with: {&#39;n_estimators&#39;: 750}
-Model training time: 2:45:18.543295
+Model training time: 2:55:11.940474
 </pre>
 </div>
 </div>
@@ -16501,7 +16501,7 @@ Model training time: 2:45:18.543295
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>Completed writing output file: submission_20210601-0040.csv
+<pre>Completed writing output file: submission_20210602-2131.csv
 </pre>
 </div>
 </div>
@@ -16550,7 +16550,7 @@ Model training time: 2:45:18.543295
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>Total time for the script: 5:00:42.191791
+<pre>Total time for the script: 5:24:13.928865
 </pre>
 </div>
 </div>
