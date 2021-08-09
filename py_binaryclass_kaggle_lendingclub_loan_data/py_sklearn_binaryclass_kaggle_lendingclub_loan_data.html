@@ -15068,33 +15068,6 @@ df_features_train.shape: (8620, 13) df_target_train.shape: (8620,)
 
 </div>
 
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
-<div class="jp-Cell-inputWrapper">
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[21]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-     <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># # Split the data further into training, validation, and test datasets</span>
-<span class="c1"># df_train, df_test = train_test_split(df_dataset_import, test_size=TEST_SET_RATIO, stratify=df_dataset_import.iloc[:,total_feature_count], random_state=RNG_SEED)</span>
-
-<span class="c1"># # We create attribute-only and target-only datasets (df_features_train and df_target_train)</span>
-<span class="c1"># # for various visualization and cleaning/transformation operations</span>
-<span class="c1"># if target_column_position == total_column_count:</span>
-<span class="c1">#     df_features_train = df_train.iloc[:,0:total_feature_count]</span>
-<span class="c1">#     df_target_train = df_train.iloc[:,total_feature_count]</span>
-<span class="c1"># else:</span>
-<span class="c1">#     df_features_train = df_train.iloc[:,1:total_column_count]</span>
-<span class="c1">#     df_target_train = df_train.iloc[:,0]</span>
-
-<span class="c1"># print(&quot;df_dataset_import.shape: {} df_train.shape: {} df_test.shape: {}&quot;.format(df_dataset_import.shape, df_train.shape,df_test.shape))</span>
-<span class="c1"># print(&quot;df_features_train.shape: {} df_target_train.shape: {}&quot;.format(df_features_train.shape, df_target_train.shape))</span>
-</pre></div>
-
-     </div>
-</div>
-</div>
-</div>
-
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
