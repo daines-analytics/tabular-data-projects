@@ -14581,8 +14581,8 @@ body[data-format='mobile'] .jp-OutputArea-child .jp-OutputArea-output {
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
 <h1 id="Binary-Class-Tabular-Model-for-Kaggle-Playground-Series-Season-3-Episode-2-Using-Python-and-Scikit-Learn">Binary-Class Tabular Model for Kaggle Playground Series Season 3 Episode 2 Using Python and Scikit-Learn<a class="anchor-link" href="#Binary-Class-Tabular-Model-for-Kaggle-Playground-Series-Season-3-Episode-2-Using-Python-and-Scikit-Learn">&#182;</a></h1><h3 id="David-Lowe">David Lowe<a class="anchor-link" href="#David-Lowe">&#182;</a></h3><h3 id="January-23,-2023">January 23, 2023<a class="anchor-link" href="#January-23,-2023">&#182;</a></h3><p>SUMMARY: The project aims to construct a predictive model using various machine learning algorithms and document the end-to-end steps using a template. The Kaggle Playground Series Season 3 Episode 2 dataset is a binary-class modeling situation where we attempt to predict one of two possible outcomes.</p>
 <p>INTRODUCTION: Kaggle wants to provide an approachable environment for relatively new people in their data science journey. Since January 2021, they have hosted playground-style competitions to give the Kaggle community a variety of reasonably lightweight challenges that can be used to learn and sharpen skills in different aspects of machine learning and data science. The dataset for this competition was generated from a deep learning model trained on the Stroke Prediction Dataset. Feature distributions are close to but different from the original.</p>
-<p>ANALYSIS: The average performance of the machine learning algorithms achieved an AUC/ROC benchmark of 0.7836 after training. Furthermore, we selected Logistic Regression as the final model as it processed the training dataset with an AUC/ROC score of 0.8735. When we processed the test dataset with the final model, the model achieved an AUC/ROC score of 0.8662.</p>
-<p>CONCLUSION: In this iteration, the Random Forest model appeared to be a suitable algorithm for modeling this dataset.</p>
+<p>ANALYSIS: The average performance of the machine learning algorithms achieved an AUC/ROC benchmark of 0.7836 after training. Furthermore, we selected Logistic Regression as the final model as it processed the training dataset with an AUC/ROC score of 0.8735. When we processed the test dataset with the final model, the model achieved an AUC/ROC score of 0.8670.</p>
+<p>CONCLUSION: In this iteration, the Logistic Regression model appeared to be a suitable algorithm for modeling this dataset.</p>
 <p>Dataset Used: Playground Series Season 3, Episode 2</p>
 <p>Dataset ML Model: Binary-Class classification with numerical and categorical features</p>
 <p>Dataset Reference: <a href="https://www.kaggle.com/competitions/playground-series-s3e2">https://www.kaggle.com/competitions/playground-series-s3e2</a></p>
@@ -16342,7 +16342,7 @@ Increase the number of iterations (max_iter) or scale the data as shown in:
 Please also refer to the documentation for alternative solver options:
     https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
   n_iter_i = _check_optimize_result(
-[Parallel(n_jobs=1)]: Done  10 out of  10 | elapsed:    5.1s finished
+[Parallel(n_jobs=1)]: Done  10 out of  10 | elapsed:    7.1s finished
 [Parallel(n_jobs=1)]: Using backend SequentialBackend with 1 concurrent workers.
 </pre>
 </div>
@@ -16357,7 +16357,7 @@ Please also refer to the documentation for alternative solver options:
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
 <pre>LGR: 0.873508 (0.015835)
 LogisticRegression(n_jobs=1, random_state=888)
-Model training time: 0:00:05.059335 
+Model training time: 0:00:07.092137 
 
 </pre>
 </div>
@@ -16370,7 +16370,7 @@ Model training time: 0:00:05.059335
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr">
-<pre>[Parallel(n_jobs=1)]: Done  10 out of  10 | elapsed:    1.1s finished
+<pre>[Parallel(n_jobs=1)]: Done  10 out of  10 | elapsed:    0.8s finished
 [Parallel(n_jobs=1)]: Using backend SequentialBackend with 1 concurrent workers.
 </pre>
 </div>
@@ -16385,7 +16385,7 @@ Model training time: 0:00:05.059335
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
 <pre>CART: 0.620437 (0.024473)
 DecisionTreeClassifier(random_state=888)
-Model training time: 0:00:01.065747 
+Model training time: 0:00:00.771738 
 
 </pre>
 </div>
@@ -16398,7 +16398,7 @@ Model training time: 0:00:01.065747
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr">
-<pre>[Parallel(n_jobs=1)]: Done  10 out of  10 | elapsed:    3.3s finished
+<pre>[Parallel(n_jobs=1)]: Done  10 out of  10 | elapsed:    5.1s finished
 [Parallel(n_jobs=1)]: Using backend SequentialBackend with 1 concurrent workers.
 </pre>
 </div>
@@ -16413,7 +16413,7 @@ Model training time: 0:00:01.065747
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
 <pre>KNN: 0.739169 (0.036850)
 KNeighborsClassifier(n_jobs=1)
-Model training time: 0:00:03.301010 
+Model training time: 0:00:05.062155 
 
 </pre>
 </div>
@@ -16426,7 +16426,7 @@ Model training time: 0:00:03.301010
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr">
-<pre>[Parallel(n_jobs=1)]: Done  10 out of  10 | elapsed:    4.6s finished
+<pre>[Parallel(n_jobs=1)]: Done  10 out of  10 | elapsed:    5.1s finished
 [Parallel(n_jobs=1)]: Using backend SequentialBackend with 1 concurrent workers.
 </pre>
 </div>
@@ -16441,7 +16441,7 @@ Model training time: 0:00:03.301010
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
 <pre>BGT: 0.807226 (0.019592)
 BaggingClassifier(n_jobs=1, random_state=888)
-Model training time: 0:00:04.556914 
+Model training time: 0:00:05.118259 
 
 </pre>
 </div>
@@ -16454,7 +16454,7 @@ Model training time: 0:00:04.556914
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr">
-<pre>[Parallel(n_jobs=1)]: Done  10 out of  10 | elapsed:   13.7s finished
+<pre>[Parallel(n_jobs=1)]: Done  10 out of  10 | elapsed:   13.3s finished
 [Parallel(n_jobs=1)]: Using backend SequentialBackend with 1 concurrent workers.
 </pre>
 </div>
@@ -16469,14 +16469,14 @@ Model training time: 0:00:04.556914
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
 <pre>RNF: 0.846044 (0.018454)
 RandomForestClassifier(n_jobs=1, random_state=888)
-Model training time: 0:00:13.684583 
+Model training time: 0:00:13.325170 
 
 EXT: 0.815560 (0.021188)
 ExtraTreesClassifier(n_jobs=1, random_state=888)
-Model training time: 0:00:06.820633 
+Model training time: 0:00:06.532738 
 
 Average metrics (roc_auc) from all models: 0.7836571634189334
-Total training time for all models: 0:00:34.563448
+Total training time for all models: 0:00:37.964509
 </pre>
 </div>
 </div>
@@ -16488,7 +16488,7 @@ Total training time for all models: 0:00:34.563448
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr">
-<pre>[Parallel(n_jobs=1)]: Done  10 out of  10 | elapsed:    6.8s finished
+<pre>[Parallel(n_jobs=1)]: Done  10 out of  10 | elapsed:    6.5s finished
 </pre>
 </div>
 </div>
@@ -16659,7 +16659,7 @@ Best: 0.852394 using {&#39;n_estimators&#39;: 500}
 0.846044 (0.018454) with: {&#39;n_estimators&#39;: 100}
 0.851878 (0.015348) with: {&#39;n_estimators&#39;: 300}
 0.852394 (0.015376) with: {&#39;n_estimators&#39;: 500}
-Model training time: 0:01:18.667590
+Model training time: 0:01:18.759066
 </pre>
 </div>
 </div>
@@ -16764,7 +16764,7 @@ Best: 0.843325 using {&#39;n_estimators&#39;: 30}
 0.807226 (0.019592) with: {&#39;n_estimators&#39;: 10}
 0.834101 (0.019208) with: {&#39;n_estimators&#39;: 20}
 0.843325 (0.017078) with: {&#39;n_estimators&#39;: 30}
-Model training time: 0:00:15.867502
+Model training time: 0:00:15.569575
 </pre>
 </div>
 </div>
@@ -17012,6 +17012,10 @@ Please also refer to the documentation for alternative solver options:
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_features_test</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">TEST_DATASET</span><span class="p">)</span>
 <span class="n">df_features_test</span><span class="p">[</span><span class="s1">&#39;is_synthetic&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
 
+<span class="c1"># Fill in some missing fields with the most common values</span>
+<span class="n">df_features_test</span><span class="p">[</span><span class="s1">&#39;gender&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_features_test</span><span class="p">[</span><span class="s1">&#39;gender&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">clean_gender</span><span class="p">)</span>
+<span class="n">df_features_test</span><span class="p">[</span><span class="s1">&#39;smoking_status&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_features_test</span><span class="p">[</span><span class="s1">&#39;smoking_status&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">clean_smoking_status</span><span class="p">)</span>
+
 <span class="c1"># Take a peek at the dataframe after import</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">df_features_test</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
 </pre></div>
@@ -17043,9 +17047,9 @@ Please also refer to the documentation for alternative solver options:
 4  15308    Male  32.0             0              0          Yes   Private   
 
   Residence_type  avg_glucose_level   bmi smoking_status  is_synthetic  
-0          Rural              82.54  33.4        Unknown             1  
-1          Urban              72.06  28.5        Unknown             1  
-2          Urban             103.72  19.5        Unknown             1  
+0          Rural              82.54  33.4   never smoked             1  
+1          Urban              72.06  28.5   never smoked             1  
+2          Urban             103.72  19.5   never smoked             1  
 3          Urban              69.24  41.4         smokes             1  
 4          Rural             111.15  30.1         smokes             1  
 </pre>
@@ -17062,6 +17066,63 @@ Please also refer to the documentation for alternative solver options:
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[53]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_features_test</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+
+
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+<pre>&lt;class &#39;pandas.core.frame.DataFrame&#39;&gt;
+RangeIndex: 10204 entries, 0 to 10203
+Data columns (total 12 columns):
+ #   Column             Non-Null Count  Dtype  
+---  ------             --------------  -----  
+ 0   id                 10204 non-null  int64  
+ 1   gender             10204 non-null  object 
+ 2   age                10204 non-null  float64
+ 3   hypertension       10204 non-null  int64  
+ 4   heart_disease      10204 non-null  int64  
+ 5   ever_married       10204 non-null  object 
+ 6   work_type          10204 non-null  object 
+ 7   Residence_type     10204 non-null  object 
+ 8   avg_glucose_level  10204 non-null  float64
+ 9   bmi                10204 non-null  float64
+ 10  smoking_status     10204 non-null  object 
+ 11  is_synthetic       10204 non-null  int64  
+dtypes: float64(3), int64(4), object(5)
+memory usage: 956.8+ KB
+</pre>
+</div>
+</div>
+
+</div>
+
+</div>
+
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[54]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">id_column_name</span> <span class="o">=</span> <span class="n">df_features_test</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -17108,7 +17169,7 @@ Please also refer to the documentation for alternative solver options:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[54]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[55]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Dropping unique identifier and unnecessary features</span>
@@ -17145,9 +17206,9 @@ Please also refer to the documentation for alternative solver options:
 4    Male  32.0             0              0          Yes   Private   
 
   Residence_type  avg_glucose_level   bmi smoking_status  is_synthetic  
-0          Rural              82.54  33.4        Unknown             1  
-1          Urban              72.06  28.5        Unknown             1  
-2          Urban             103.72  19.5        Unknown             1  
+0          Rural              82.54  33.4   never smoked             1  
+1          Urban              72.06  28.5   never smoked             1  
+2          Urban             103.72  19.5   never smoked             1  
 3          Urban              69.24  41.4         smokes             1  
 4          Rural             111.15  30.1         smokes             1  
 </pre>
@@ -17163,7 +17224,7 @@ Please also refer to the documentation for alternative solver options:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[55]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[56]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Finalize the test dataset for the testing activities</span>
@@ -17204,7 +17265,7 @@ Please also refer to the documentation for alternative solver options:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[56]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[57]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Make batched predictions</span>
@@ -17231,13 +17292,13 @@ Please also refer to the documentation for alternative solver options:
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>[[0.90156841 0.09843159]
- [0.68878866 0.31121134]
- [0.99806393 0.00193607]
+<pre>[[0.9125494  0.0874506 ]
+ [0.71603056 0.28396944]
+ [0.99830021 0.00169979]
  ...
- [0.99834246 0.00165754]
+ [0.9985448  0.0014552 ]
  [0.99185326 0.00814674]
- [0.99879702 0.00120298]]
+ [0.99894393 0.00105607]]
 </pre>
 </div>
 </div>
@@ -17251,7 +17312,7 @@ Please also refer to the documentation for alternative solver options:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[57]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[58]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_sample_submission</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">SUBMISSION_TEMPLATE</span><span class="p">)</span>
@@ -17293,7 +17354,7 @@ Please also refer to the documentation for alternative solver options:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[58]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[59]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_kaggle_submission</span><span class="p">[</span><span class="n">submission_header</span><span class="p">]</span> <span class="o">=</span> <span class="n">test_predictions</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
@@ -17320,9 +17381,9 @@ Please also refer to the documentation for alternative solver options:
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
 <pre>      id    stroke
-0  15304  0.098432
-1  15305  0.311211
-2  15306  0.001936
+0  15304  0.087451
+1  15305  0.283969
+2  15306  0.001700
 3  15307  0.113122
 4  15308  0.016301
 </pre>
@@ -17338,7 +17399,7 @@ Please also refer to the documentation for alternative solver options:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[59]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[60]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">submission_file</span> <span class="o">=</span> <span class="n">df_kaggle_submission</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -17367,7 +17428,7 @@ Please also refer to the documentation for alternative solver options:
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>Completed writing output file: submission_sklearn_20230121-0114.csv
+<pre>Completed writing output file: submission_sklearn_20230122-2317.csv
 </pre>
 </div>
 </div>
@@ -17381,7 +17442,7 @@ Please also refer to the documentation for alternative solver options:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[60]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[61]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">if</span> <span class="n">NOTIFY_STATUS</span><span class="p">:</span> <span class="n">status_notify</span><span class="p">(</span><span class="s2">&quot;Task 5 - Finalize Model and Make Predictions completed! &quot;</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%a</span><span class="s1"> %B </span><span class="si">%d</span><span class="s1">, %Y %I:%M:%S %p&#39;</span><span class="p">))</span>
@@ -17397,7 +17458,7 @@ Please also refer to the documentation for alternative solver options:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[61]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[62]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;Total time for the script:&#39;</span><span class="p">,(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">START_TIME_SCRIPT</span><span class="p">))</span>
@@ -17422,7 +17483,7 @@ Please also refer to the documentation for alternative solver options:
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>Total time for the script: 0:02:16.265152
+<pre>Total time for the script: 0:02:22.733561
 </pre>
 </div>
 </div>
