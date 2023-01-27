@@ -16278,26 +16278,6 @@ Total number of columns in the feature dataframe: 39
 </div>
 </div>
 
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
-<div class="jp-Cell-inputWrapper">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[31]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-     <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Finalize the training dataset for the modeling activities</span>
-<span class="n">array_features_train</span> <span class="o">=</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">df_features_train</span><span class="p">)</span>
-<span class="c1"># array_features_train = df_features_train.to_numpy()</span>
-<span class="n">label_encoder</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">LabelEncoder</span><span class="p">()</span>
-<span class="n">array_target_train</span> <span class="o">=</span> <span class="n">label_encoder</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">df_target_train</span><span class="p">)</span>
-</pre></div>
-
-     </div>
-</div>
-</div>
-</div>
-
 </div>
 <div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper">
@@ -16314,7 +16294,7 @@ Total number of columns in the feature dataframe: 39
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[32]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[31]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Not applicable for this iteration of modeling</span>
@@ -16341,7 +16321,7 @@ Total number of columns in the feature dataframe: 39
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[33]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[32]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Not applicable for this iteration of modeling</span>
@@ -16368,14 +16348,14 @@ Total number of columns in the feature dataframe: 39
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[34]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[33]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Finalize the training dataset for the modeling activities</span>
-<span class="c1"># array_features_train = preprocessor.fit_transform(df_features_train)</span>
+<span class="n">array_features_train</span> <span class="o">=</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">df_features_train</span><span class="p">)</span>
 <span class="c1"># array_features_train = df_features_train.to_numpy()</span>
-<span class="c1"># label_encoder = preprocessing.LabelEncoder()</span>
-<span class="c1"># array_target_train = label_encoder.fit_transform(df_target_train)</span>
+<span class="n">label_encoder</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">LabelEncoder</span><span class="p">()</span>
+<span class="n">array_target_train</span> <span class="o">=</span> <span class="n">label_encoder</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">df_target_train</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;array_features_train.shape: </span><span class="si">{}</span><span class="s2"> array_target_train.shape: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">array_features_train</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">array_target_train</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
 </pre></div>
 
@@ -16412,7 +16392,7 @@ Total number of columns in the feature dataframe: 39
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[35]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[34]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">if</span> <span class="n">NOTIFY_STATUS</span><span class="p">:</span> <span class="n">status_notify</span><span class="p">(</span><span class="s2">&quot;Task 3 - Pre-process Data completed! &quot;</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%a</span><span class="s1"> %B </span><span class="si">%d</span><span class="s1">, %Y %I:%M:%S %p&#39;</span><span class="p">))</span>
@@ -16439,7 +16419,7 @@ Total number of columns in the feature dataframe: 39
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[36]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[35]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">if</span> <span class="n">NOTIFY_STATUS</span><span class="p">:</span> <span class="n">status_notify</span><span class="p">(</span><span class="s2">&quot;Task 4 - Train and Tune Models has begun! &quot;</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%a</span><span class="s1"> %B </span><span class="si">%d</span><span class="s1">, %Y %I:%M:%S %p&#39;</span><span class="p">))</span>
@@ -16466,7 +16446,7 @@ Total number of columns in the feature dataframe: 39
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[37]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[36]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Set up Algorithms Spot-Checking Array</span>
@@ -16487,7 +16467,7 @@ Total number of columns in the feature dataframe: 39
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[38]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[37]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">train_models</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;LGR&#39;</span><span class="p">,</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="n">RNG_SEED</span><span class="p">,</span> <span class="n">solver</span><span class="o">=</span><span class="s1">&#39;liblinear&#39;</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">N_JOBS</span><span class="p">)))</span>
@@ -16508,7 +16488,7 @@ Total number of columns in the feature dataframe: 39
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[39]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[38]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Generate model in turn</span>
@@ -16548,7 +16528,7 @@ Total number of columns in the feature dataframe: 39
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr">
 <pre>[Parallel(n_jobs=1)]: Using backend SequentialBackend with 1 concurrent workers.
-[Parallel(n_jobs=1)]: Done  10 out of  10 | elapsed:    0.9s finished
+[Parallel(n_jobs=1)]: Done  10 out of  10 | elapsed:    0.8s finished
 [Parallel(n_jobs=1)]: Using backend SequentialBackend with 1 concurrent workers.
 </pre>
 </div>
@@ -16563,7 +16543,7 @@ Total number of columns in the feature dataframe: 39
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
 <pre>LGR: 0.839140 (0.032975)
 LogisticRegression(n_jobs=1, random_state=888, solver=&#39;liblinear&#39;)
-Model training time: 0:00:00.937640 
+Model training time: 0:00:00.829971 
 
 </pre>
 </div>
@@ -16591,7 +16571,7 @@ Model training time: 0:00:00.937640
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
 <pre>CART: 0.608538 (0.036559)
 DecisionTreeClassifier(random_state=888)
-Model training time: 0:00:00.869031 
+Model training time: 0:00:00.819716 
 
 </pre>
 </div>
@@ -16619,7 +16599,7 @@ Model training time: 0:00:00.869031
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
 <pre>KNN: 0.667843 (0.028310)
 KNeighborsClassifier(n_jobs=1)
-Model training time: 0:00:00.580028 
+Model training time: 0:00:00.644925 
 
 </pre>
 </div>
@@ -16632,7 +16612,7 @@ Model training time: 0:00:00.580028
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr">
-<pre>[Parallel(n_jobs=1)]: Done  10 out of  10 | elapsed:    4.6s finished
+<pre>[Parallel(n_jobs=1)]: Done  10 out of  10 | elapsed:    5.5s finished
 [Parallel(n_jobs=1)]: Using backend SequentialBackend with 1 concurrent workers.
 </pre>
 </div>
@@ -16647,7 +16627,7 @@ Model training time: 0:00:00.580028
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
 <pre>BGT: 0.773456 (0.032913)
 BaggingClassifier(n_jobs=1, random_state=888)
-Model training time: 0:00:04.580752 
+Model training time: 0:00:05.468647 
 
 </pre>
 </div>
@@ -16660,7 +16640,7 @@ Model training time: 0:00:04.580752
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr">
-<pre>[Parallel(n_jobs=1)]: Done  10 out of  10 | elapsed:    7.3s finished
+<pre>[Parallel(n_jobs=1)]: Done  10 out of  10 | elapsed:    5.5s finished
 [Parallel(n_jobs=1)]: Using backend SequentialBackend with 1 concurrent workers.
 </pre>
 </div>
@@ -16675,14 +16655,14 @@ Model training time: 0:00:04.580752
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
 <pre>RNF: 0.825792 (0.028113)
 RandomForestClassifier(n_jobs=1, random_state=888)
-Model training time: 0:00:07.309428 
+Model training time: 0:00:05.467356 
 
 EXT: 0.825252 (0.025833)
 ExtraTreesClassifier(n_jobs=1, random_state=888)
-Model training time: 0:00:03.515515 
+Model training time: 0:00:02.866954 
 
 Average metrics (roc_auc) from all models: 0.7566702812905507
-Total training time for all models: 0:00:17.861539
+Total training time for all models: 0:00:16.151228
 </pre>
 </div>
 </div>
@@ -16694,7 +16674,7 @@ Total training time for all models: 0:00:17.861539
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr">
-<pre>[Parallel(n_jobs=1)]: Done  10 out of  10 | elapsed:    3.5s finished
+<pre>[Parallel(n_jobs=1)]: Done  10 out of  10 | elapsed:    2.9s finished
 </pre>
 </div>
 </div>
@@ -16719,7 +16699,7 @@ Total training time for all models: 0:00:17.861539
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[40]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[39]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span><span class="mi">12</span><span class="p">))</span>
@@ -16770,7 +16750,7 @@ jp-needs-light-background
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[41]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[40]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">if</span> <span class="n">NOTIFY_STATUS</span><span class="p">:</span> <span class="n">status_notify</span><span class="p">(</span><span class="s2">&quot;Task 4 - Train and Tune Models completed! &quot;</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%a</span><span class="s1"> %B </span><span class="si">%d</span><span class="s1">, %Y %I:%M:%S %p&#39;</span><span class="p">))</span>
@@ -16797,7 +16777,7 @@ jp-needs-light-background
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[42]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[41]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Set up the comparison array</span>
@@ -16815,7 +16795,7 @@ jp-needs-light-background
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[43]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[42]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Tuning algorithm #1</span>
@@ -16865,7 +16845,7 @@ Best: 0.838023 using {&#39;n_estimators&#39;: 500}
 0.825792 (0.028113) with: {&#39;n_estimators&#39;: 100}
 0.835387 (0.027542) with: {&#39;n_estimators&#39;: 300}
 0.838023 (0.026173) with: {&#39;n_estimators&#39;: 500}
-Model training time: 0:00:45.493077
+Model training time: 0:00:37.993511
 </pre>
 </div>
 </div>
@@ -16879,7 +16859,7 @@ Model training time: 0:00:45.493077
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[44]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[43]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">best_paramKey1</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">grid_result1</span><span class="o">.</span><span class="n">best_params_</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
@@ -16920,7 +16900,7 @@ Model training time: 0:00:45.493077
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[45]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[44]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Tuning algorithm #2</span>
@@ -16970,7 +16950,7 @@ Best: 0.804855 using {&#39;n_estimators&#39;: 30}
 0.773456 (0.032913) with: {&#39;n_estimators&#39;: 10}
 0.799091 (0.026135) with: {&#39;n_estimators&#39;: 20}
 0.804855 (0.028887) with: {&#39;n_estimators&#39;: 30}
-Model training time: 0:00:19.157951
+Model training time: 0:00:15.158602
 </pre>
 </div>
 </div>
@@ -16984,7 +16964,7 @@ Model training time: 0:00:19.157951
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[46]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[45]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">best_paramKey2</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">grid_result2</span><span class="o">.</span><span class="n">best_params_</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
@@ -17036,7 +17016,7 @@ Model training time: 0:00:19.157951
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[47]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[46]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span><span class="mi">12</span><span class="p">))</span>
@@ -17087,7 +17067,7 @@ jp-needs-light-background
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[48]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[47]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">if</span> <span class="n">NOTIFY_STATUS</span><span class="p">:</span> <span class="n">status_notify</span><span class="p">(</span><span class="s2">&quot;Task 4 - Train and Tune Models completed! &quot;</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%a</span><span class="s1"> %B </span><span class="si">%d</span><span class="s1">, %Y %I:%M:%S %p&#39;</span><span class="p">))</span>
@@ -17114,7 +17094,7 @@ jp-needs-light-background
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[49]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[48]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">if</span> <span class="n">NOTIFY_STATUS</span><span class="p">:</span> <span class="n">status_notify</span><span class="p">(</span><span class="s2">&quot;Task 5 - Finalize Model and Make Predictions has begun! &quot;</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%a</span><span class="s1"> %B </span><span class="si">%d</span><span class="s1">, %Y %I:%M:%S %p&#39;</span><span class="p">))</span>
@@ -17141,7 +17121,7 @@ jp-needs-light-background
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[50]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[49]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># final_model = LogisticRegression(random_state=RNG_SEED, solver=&#39;liblinear&#39;, n_jobs=N_JOBS)</span>
@@ -17194,7 +17174,7 @@ jp-needs-light-background
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[51]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[50]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_features_test</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">TEST_DATASET</span><span class="p">)</span>
@@ -17275,7 +17255,7 @@ jp-needs-light-background
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[52]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[51]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_features_test</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -17352,7 +17332,7 @@ memory usage: 279.9+ KB
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[53]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[52]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">id_column_name</span> <span class="o">=</span> <span class="n">df_features_test</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -17399,7 +17379,7 @@ memory usage: 279.9+ KB
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[54]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[53]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Dropping unique identifier and unnecessary features</span>
@@ -17488,7 +17468,7 @@ memory usage: 279.9+ KB
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[55]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[54]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Finalize the test dataset for the testing activities</span>
@@ -17529,7 +17509,7 @@ memory usage: 279.9+ KB
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[56]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[55]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Make batched predictions</span>
@@ -17576,7 +17556,7 @@ memory usage: 279.9+ KB
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[57]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[56]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_sample_submission</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">SUBMISSION_TEMPLATE</span><span class="p">)</span>
@@ -17618,7 +17598,7 @@ memory usage: 279.9+ KB
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[58]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[57]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_kaggle_submission</span><span class="p">[</span><span class="n">submission_header</span><span class="p">]</span> <span class="o">=</span> <span class="n">test_predictions</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
@@ -17663,7 +17643,7 @@ memory usage: 279.9+ KB
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[59]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[58]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">submission_file</span> <span class="o">=</span> <span class="n">df_kaggle_submission</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -17692,7 +17672,7 @@ memory usage: 279.9+ KB
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>Completed writing output file: submission_sklearn_20230127-1647.csv
+<pre>Completed writing output file: submission_sklearn_20230127-2148.csv
 </pre>
 </div>
 </div>
@@ -17706,7 +17686,7 @@ memory usage: 279.9+ KB
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[60]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[59]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">if</span> <span class="n">NOTIFY_STATUS</span><span class="p">:</span> <span class="n">status_notify</span><span class="p">(</span><span class="s2">&quot;Task 5 - Finalize Model and Make Predictions completed! &quot;</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%a</span><span class="s1"> %B </span><span class="si">%d</span><span class="s1">, %Y %I:%M:%S %p&#39;</span><span class="p">))</span>
@@ -17722,7 +17702,7 @@ memory usage: 279.9+ KB
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[61]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[60]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;Total time for the script:&#39;</span><span class="p">,(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">START_TIME_SCRIPT</span><span class="p">))</span>
@@ -17747,7 +17727,7 @@ memory usage: 279.9+ KB
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>Total time for the script: 0:01:36.512402
+<pre>Total time for the script: 0:01:28.214958
 </pre>
 </div>
 </div>
