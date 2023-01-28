@@ -14581,7 +14581,7 @@ body[data-format='mobile'] .jp-OutputArea-child .jp-OutputArea-output {
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
 <h1 id="Binary-Class-Tabular-Model-for-Kaggle-Playground-Series-Season-3-Episode-3-Using-Python-and-TensorFlow">Binary-Class Tabular Model for Kaggle Playground Series Season 3 Episode 3 Using Python and TensorFlow<a class="anchor-link" href="#Binary-Class-Tabular-Model-for-Kaggle-Playground-Series-Season-3-Episode-3-Using-Python-and-TensorFlow">&#182;</a></h1><h3 id="David-Lowe">David Lowe<a class="anchor-link" href="#David-Lowe">&#182;</a></h3><h3 id="February-2,-2023">February 2, 2023<a class="anchor-link" href="#February-2,-2023">&#182;</a></h3><p>SUMMARY: The project aims to construct a predictive model using various machine learning algorithms and document the end-to-end steps using a template. The Kaggle Playground Series Season 3 Episode 3 dataset is a binary-class modeling situation where we attempt to predict one of two possible outcomes.</p>
 <p>INTRODUCTION: Kaggle wants to provide an approachable environment for relatively new people in their data science journey. Since January 2021, they have hosted playground-style competitions to give the Kaggle community a variety of reasonably lightweight challenges that can be used to learn and sharpen skills in different aspects of machine learning and data science. The dataset for this competition was generated from a deep learning model trained on the IBM HR Analytics Employee Attrition &amp; Performance dataset. Feature distributions are close to but different from the original.</p>
-<p>ANALYSIS: The average performance of the cross-validated TensorFlow models achieved a ROC/AUC benchmark of 0.8179 after training. When we processed the test dataset with the final model, the model achieved a ROC/AUC score of 0.8754.</p>
+<p>ANALYSIS: The average performance of the cross-validated TensorFlow models achieved a ROC/AUC benchmark of 0.8175 after training. When we processed the test dataset with the final model, the model achieved a ROC/AUC score of 0.8754.</p>
 <p>CONCLUSION: In this iteration, TensorFlow appeared to be a suitable algorithm for modeling this dataset.</p>
 <p>Dataset Used: Playground Series Season 3, Episode 3</p>
 <p>Dataset ML Model: Binary-Class classification with numerical and categorical features</p>
@@ -14635,7 +14635,7 @@ body[data-format='mobile'] .jp-OutputArea-child .jp-OutputArea-output {
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>Sat Jan 28 00:48:49 2023       
+<pre>Sat Jan 28 01:04:38 2023       
 +-----------------------------------------------------------------------------+
 | NVIDIA-SMI 510.47.03    Driver Version: 510.47.03    CUDA Version: 11.6     |
 |-------------------------------+----------------------+----------------------+
@@ -14644,7 +14644,7 @@ body[data-format='mobile'] .jp-OutputArea-child .jp-OutputArea-output {
 |                               |                      |               MIG M. |
 |===============================+======================+======================|
 |   0  NVIDIA A100-SXM...  Off  | 00000000:00:04.0 Off |                    0 |
-| N/A   30C    P0    48W / 400W |      0MiB / 40960MiB |      0%      Default |
+| N/A   36C    P0    49W / 350W |      0MiB / 40960MiB |      0%      Default |
 |                               |                      |             Disabled |
 +-------------------------------+----------------------+----------------------+
                                                                                
@@ -16540,6 +16540,7 @@ Total number of columns in the feature dataframe: 39
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Finalize the training dataset for the modeling activities</span>
+<span class="n">array_features_train</span> <span class="o">=</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">df_features_train</span><span class="p">)</span>
 <span class="n">array_target_train</span> <span class="o">=</span> <span class="n">df_target_train</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;array_features_train.shape: </span><span class="si">{}</span><span class="s2"> array_target_train.shape: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">array_features_train</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">array_target_train</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
 </pre></div>
@@ -16731,18 +16732,18 @@ Total number of columns in the feature dataframe: 39
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>Score from iteration 1 &gt;&gt;&gt; 0.8028
-Score from iteration 2 &gt;&gt;&gt; 0.8440
-Score from iteration 3 &gt;&gt;&gt; 0.8277
+<pre>Score from iteration 1 &gt;&gt;&gt; 0.8031
+Score from iteration 2 &gt;&gt;&gt; 0.8432
+Score from iteration 3 &gt;&gt;&gt; 0.8271
 Score from iteration 4 &gt;&gt;&gt; 0.8022
-Score from iteration 5 &gt;&gt;&gt; 0.8413
-Score from iteration 6 &gt;&gt;&gt; 0.8244
-Score from iteration 7 &gt;&gt;&gt; 0.8167
-Score from iteration 8 &gt;&gt;&gt; 0.7954
-Score from iteration 9 &gt;&gt;&gt; 0.8017
-Score from iteration 10 &gt;&gt;&gt; 0.8229
-Average model score from all iterations: 0.8179 (0.0163)
-Total time for model fitting and cross validating: 0:00:40.771724
+Score from iteration 5 &gt;&gt;&gt; 0.8411
+Score from iteration 6 &gt;&gt;&gt; 0.8233
+Score from iteration 7 &gt;&gt;&gt; 0.8157
+Score from iteration 8 &gt;&gt;&gt; 0.7930
+Score from iteration 9 &gt;&gt;&gt; 0.8025
+Score from iteration 10 &gt;&gt;&gt; 0.8237
+Average model score from all iterations: 0.8175 (0.0163)
+Total time for model fitting and cross validating: 0:00:43.174807
 </pre>
 </div>
 </div>
@@ -16883,25 +16884,25 @@ Total time for model fitting and cross validating: 0:00:40.771724
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
 <pre>Epoch 1/10
-99/99 [==============================] - 1s 4ms/step - loss: 0.4756 - auc: 0.5483
+99/99 [==============================] - 1s 4ms/step - loss: 0.4756 - auc: 0.5482
 Epoch 2/10
 99/99 [==============================] - 0s 4ms/step - loss: 0.3662 - auc: 0.7448
 Epoch 3/10
-99/99 [==============================] - 0s 4ms/step - loss: 0.3317 - auc: 0.8028
+99/99 [==============================] - 0s 4ms/step - loss: 0.3317 - auc: 0.8029
 Epoch 4/10
-99/99 [==============================] - 0s 4ms/step - loss: 0.3025 - auc: 0.8405
+99/99 [==============================] - 0s 4ms/step - loss: 0.3025 - auc: 0.8406
 Epoch 5/10
-99/99 [==============================] - 0s 4ms/step - loss: 0.2825 - auc: 0.8615
+99/99 [==============================] - 0s 4ms/step - loss: 0.2824 - auc: 0.8618
 Epoch 6/10
-99/99 [==============================] - 0s 4ms/step - loss: 0.2670 - auc: 0.8762
+99/99 [==============================] - 0s 4ms/step - loss: 0.2670 - auc: 0.8763
 Epoch 7/10
 99/99 [==============================] - 0s 4ms/step - loss: 0.2542 - auc: 0.8919
 Epoch 8/10
 99/99 [==============================] - 0s 4ms/step - loss: 0.2403 - auc: 0.9033
 Epoch 9/10
-99/99 [==============================] - 0s 4ms/step - loss: 0.2282 - auc: 0.9125
+99/99 [==============================] - 0s 4ms/step - loss: 0.2282 - auc: 0.9124
 Epoch 10/10
-99/99 [==============================] - 0s 4ms/step - loss: 0.2153 - auc: 0.9247
+99/99 [==============================] - 0s 4ms/step - loss: 0.2152 - auc: 0.9246
 Model: &#34;sequential_10&#34;
 _________________________________________________________________
  Layer (type)                Output Shape              Param #   
@@ -17319,14 +17320,14 @@ memory usage: 279.9+ KB
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>35/35 [==============================] - 0s 2ms/step
-[[0.12018692]
- [0.25209677]
- [0.02196921]
+<pre>35/35 [==============================] - 0s 1ms/step
+[[0.11690965]
+ [0.24903066]
+ [0.02200417]
  ...
- [0.04338412]
- [0.07572778]
- [0.00287807]]
+ [0.04385493]
+ [0.07603192]
+ [0.0028986 ]]
 </pre>
 </div>
 </div>
@@ -17409,11 +17410,11 @@ memory usage: 279.9+ KB
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
 <pre>     id  Attrition
-0  1677   0.120187
-1  1678   0.252097
-2  1679   0.021969
-3  1680   0.146801
-4  1681   0.616987
+0  1677   0.116910
+1  1678   0.249031
+2  1679   0.022004
+3  1680   0.147052
+4  1681   0.617296
 </pre>
 </div>
 </div>
@@ -17456,7 +17457,7 @@ memory usage: 279.9+ KB
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>Completed writing output file: submission_tensorflow_20230128-0049.csv
+<pre>Completed writing output file: submission_tensorflow_20230128-0105.csv
 </pre>
 </div>
 </div>
@@ -17511,7 +17512,7 @@ memory usage: 279.9+ KB
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>Total time for the script: 0:00:54.495629
+<pre>Total time for the script: 0:00:59.263442
 </pre>
 </div>
 </div>
